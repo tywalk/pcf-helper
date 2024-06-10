@@ -1,0 +1,18 @@
+{
+  "name": "@tywalk/pcf-helper",
+  "version": "1.4.9",
+  "description": "Command line helper for building and publishing PCF controls to Dataverse.",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "pcf"
+  ],
+  "author": "tywalk",
+  "bin": {
+    "pcf-helper-upgrade": "bin/upgrade.js",
+    "pcf-helper-build": "bin/build.js",
+    "pcf-helper-import": "bin/import.js",
+    "pcf-helper-deploy": "bin/deploy.js"
+  }
+}
