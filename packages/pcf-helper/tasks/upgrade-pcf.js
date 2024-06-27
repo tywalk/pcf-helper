@@ -4,7 +4,7 @@ const { formatMsToSec } = require('../util/performanceUtil');
 function run(path) {
   console.log('[PCF Helper] Starting upgrade...\n');
   const tick = performance.now();
-  const task = spawnSync(`pac solution version -s Solution -sp ${path} && pac pcf version -s Manifest && npm version patch`, {
+  const task = spawnSync(`pac solution version -s Solution -sp ${path} && pac pcf version -s Manifest && npm version patch --no-git-tag-version`, {
     cwd: process.cwd(),
     stdio: 'inherit',
     shell: true,

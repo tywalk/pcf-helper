@@ -16,6 +16,6 @@
     "pcf-helper-run": "./index.js"
   },
   "dependencies": {
-    "@tywalk/pcf-helper": "^1.4.9"
+    "@tywalk/pcf-helper": "^1.4.10"
   }
 }
