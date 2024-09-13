@@ -1,6 +1,6 @@
 {
   "name": "@tywalk/pcf-helper",
-  "version": "1.4.10",
+  "version": "1.4.11",
   "description": "Command line helper for building and publishing PCF controls to Dataverse.",
   "repository": {
     "url": "https://github.com/tywalk/pcf-helper"

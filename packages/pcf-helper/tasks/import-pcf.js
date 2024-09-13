@@ -1,10 +1,10 @@
 const { spawnSync } = require('child_process');
 const { join, extname } = require('path');
 const fs = require('fs');
-const { formatMsToSec } = require('../util/performanceUtil');
+const { formatMsToSec, formatTime } = require('../util/performanceUtil');
 
 function run(path, env, verbose) {
-  console.log('[PCF Helper] Starting import...\n');
+  console.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting import...\n');
   const tick = performance.now();
   if (!env) {
     console.warn('Path argument not provided. Assuming active auth profile organization.');
@@ -26,6 +26,7 @@ function run(path, env, verbose) {
 
   if (task.status === 0) {
     console.log('[PCF Helper] Import complete!');
+    console.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished in %is.\n', tock - tick));
   } else {
     if (task.error) {
       if (task.signal === 'SIGTERM') {
@@ -39,10 +40,8 @@ function run(path, env, verbose) {
     } else {
       console.error('[PCF Helper] Unable to complete import: One or more errors ocurred.');
     }
-    // console.warn('Killing process with id:', task.pid);
-    // process.kill(task.pid);
+    console.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished with errors in %is.\n', tock - tick));
   }
-  console.log(formatMsToSec('[PCF Helper] Import finished in %is.\n', tock - tick));
   return task.status;
 }
 

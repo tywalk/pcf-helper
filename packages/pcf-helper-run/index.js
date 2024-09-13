@@ -3,7 +3,7 @@ const upgradeTask = require('@tywalk/pcf-helper/tasks/upgrade-pcf');
 const buildTask = require('@tywalk/pcf-helper/tasks/build-pcf');
 const importTask = require('@tywalk/pcf-helper/tasks/import-pcf');
 const version = require('./package.json').version;
-const { formatMsToSec } = require('./util/performanceUtil');
+const { formatMsToSec, formatTime } = require('./util/performanceUtil');
 const [, , ...args] = process.argv;
 
 const commandArgument = args.at(0)?.toLowerCase();
@@ -60,16 +60,19 @@ function executeTasks() {
 
 var result = 0;
 try {
+  console.log('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' started.\n');
   result = executeTasks();
   if (result === 0) {
-    console.log('[PCF Helper Run] ' + commandArgument + ' complete!');
+    console.log('[PCF Helper Run] ' + commandArgument + ' completed successfully!');
+  } else {
+    console.log('[PCF Helper Run] ' + commandArgument + ' completed with errors.');
   }
 } catch (e) {
   console.error('[PCF Helper Run] One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
   result = 1;
 } finally {
   const tock = performance.now();
-  console.log(formatMsToSec('[PCF Helper Run] ' + commandArgument + ' finished in %is.', tock - tick));
+  console.log(formatMsToSec('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' finished in %is.', tock - tick));
 }
 
 return result;
