@@ -1,13 +1,24 @@
 const { spawnSync } = require('child_process');
 const { join, extname } = require('path');
 const fs = require('fs');
+const logger = require('@tywalk/color-logger').default;
 const { formatMsToSec, formatTime } = require('../util/performanceUtil');
 
+/**
+ * Imports a PCF solution into a specified Dataverse environment.
+ *
+ * @param {string} path - The path to the solution folder containing the build output.
+ * @param {string} env - The environment identifier (GUID or URL) where the solution will be imported.
+ * @param {boolean} verbose - If true, additional debug information is logged.
+ *
+ * @returns {number} The exit status of the import process.
+ */
+
 function run(path, env, verbose) {
-  console.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting import...\n');
+  logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting import...\n');
   const tick = performance.now();
   if (!env) {
-    console.warn('Path argument not provided. Assuming active auth profile organization.');
+    logger.warn('Path argument not provided. Assuming active auth profile organization.');
   }
 
   const zipDirPath = join(path, '/bin/release');
@@ -25,22 +36,22 @@ function run(path, env, verbose) {
   const tock = performance.now();
 
   if (task.status === 0) {
-    console.log('[PCF Helper] Import complete!');
-    console.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished in %is.\n', tock - tick));
+    logger.log('[PCF Helper] Import complete!');
+    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished in %is.\n', tock - tick));
   } else {
     if (task.error) {
       if (task.signal === 'SIGTERM') {
-        console.error('[PCF Helper] Unable to complete import. A timeout of 5 minutes was reached.', task.error.message);
+        logger.error('[PCF Helper] Unable to complete import. A timeout of 5 minutes was reached.', task.error.message);
       } else {
-        console.error('[PCF Helper] Unable to complete import:', task.signal, task.error.message);
+        logger.error('[PCF Helper] Unable to complete import:', task.signal, task.error.message);
       }
       if (verbose) {
-        console.debug('[PCF Helper] Error details:', task.signal, task.error.stack);
+        logger.debug('[PCF Helper] Error details:', task.signal, task.error.stack);
       }
     } else {
-      console.error('[PCF Helper] Unable to complete import: One or more errors ocurred.');
+      logger.error('[PCF Helper] Unable to complete import: One or more errors ocurred.');
     }
-    console.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished with errors in %is.\n', tock - tick));
+    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished with errors in %is.\n', tock - tick));
   }
   return task.status;
 }

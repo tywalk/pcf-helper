@@ -1,21 +1,33 @@
 #!/usr/bin/env node
 const task  = require('../tasks/build-pcf');
 const version = require('../package.json').version;
+const logger = require('@tywalk/color-logger').default;
 const [, , ...args] = process.argv;
 
-console.log('PCF Helper version', version);
+const commandArgument = args.at(0)?.toLowerCase();
+if (['-v', '--version'].includes(commandArgument)) {
+  console.log('v%s', version);
+  process.exit(0);
+}
+
+const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
+if (typeof verboseArgument !== 'undefined') {
+  logger.setDebug(true);
+}
+
+logger.log('PCF Helper version', version);
 
 const pathArgument = args.find(a => ['-p', '--path'].includes(a));
 if (typeof pathArgument === 'undefined') {
-  console.error('Path argument is required. Use --path to specify the path to solution folder.');
-  return 0;
+  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  process.exit(1);
 }
 
 const pathIndex = args.indexOf(pathArgument) + 1;
 const path = args.at(pathIndex);
 if (typeof path === 'undefined') {
-  console.error('Path argument is required. Use --path to specify the path to solution folder.');
-  return 0;
+  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  process.exit(1);
 }
 
 task.run(path);

@@ -1,12 +1,12 @@
 {
   "name": "@tywalk/pcf-helper-run",
-  "version": "1.1.14",
+  "version": "1.1.15",
   "description": "A simple command-line utility for building and publishing PCF controls to Dataverse.",
   "repository": {
     "url": "git+https://github.com/tywalk/pcf-helper.git"
   },
   "scripts": {
-    "test": "node test.js"
+    "test": "jest"
   },
   "keywords": [
     "pcf"
@@ -16,6 +16,10 @@
     "pcf-helper-run": "./index.js"
   },
   "dependencies": {
-    "@tywalk/pcf-helper": "^1.4.11"
+    "@tywalk/color-logger": "^1.0.0",
+    "@tywalk/pcf-helper": "^1.4.12"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }

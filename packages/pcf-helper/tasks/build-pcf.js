@@ -1,8 +1,16 @@
 const { spawnSync } = require('child_process');
 const { formatMsToSec, formatTime } = require('../util/performanceUtil');
+const logger = require('@tywalk/color-logger').default;
 
+/**
+ * Builds the Power Apps component framework project.
+ *
+ * @param {string} path The path to the project folder containing the pcfproj.json file.
+ *
+ * @returns {number} The exit code of the spawned process.
+ */
 function run(path) {
-  console.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting build...\n');
+  logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting build...\n');
   const tick = performance.now();
   const task = spawnSync('dotnet build', ['--restore', '-c', 'Release', path], {
     cwd: process.cwd(),
@@ -13,20 +21,20 @@ function run(path) {
   const tock = performance.now();
 
   if (task.status === 0) {
-    console.log('[PCF Helper] Build complete!');
-    console.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Build finished in %is.\n', tock - tick));
+    logger.log('[PCF Helper] Build complete!');
+    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Build finished in %is.\n', tock - tick));
   } else {
     if (task.error) {
       if (task.signal === 'SIGTERM') {
-        console.error('[PCF Helper] Unable to complete build. A timeout of 5 minutes was reached.', task.error.message);
+        logger.error('[PCF Helper] Unable to complete build. A timeout of 5 minutes was reached.', task.error.message);
       } else {
-        console.error('[PCF Helper] Unable to complete build: ', task.signal, task.error.message);
+        logger.error('[PCF Helper] Unable to complete build: ', task.signal, task.error.message);
       }
-      console.debug('[PCF Helper] Error details: ', task.signal, task.error.stack);
+      logger.debug('[PCF Helper] Error details: ', task.signal, task.error.stack);
     } else {
-      console.error('[PCF Helper] Unable to complete build: One or more errors ocurred.');
+      logger.error('[PCF Helper] Unable to complete build: One or more errors ocurred.');
     }
-    console.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Build finished with errors in %is.\n', tock - tick));
+    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Build finished with errors in %is.\n', tock - tick));
   }
   return task.status;
 }

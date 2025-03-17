@@ -2,6 +2,7 @@
 const upgradeTask = require('@tywalk/pcf-helper/tasks/upgrade-pcf');
 const buildTask = require('@tywalk/pcf-helper/tasks/build-pcf');
 const importTask = require('@tywalk/pcf-helper/tasks/import-pcf');
+const { Logger } = require('@tywalk/color-logger');
 const version = require('./package.json').version;
 const { formatMsToSec, formatTime } = require('./util/performanceUtil');
 const [, , ...args] = process.argv;
@@ -12,25 +13,32 @@ if (['-v', '--version'].includes(commandArgument)) {
   return;
 }
 
-console.log('PCF Helper Run version\n', version);
+const logger = new Logger();
+
+const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
+if (typeof verboseArgument !== 'undefined') {
+  logger.setDebug(true);
+}
+
+logger.log('PCF Helper Run version\n', version);
 
 if (typeof commandArgument === 'undefined' || !['upgrade', 'build', 'import', 'deploy'].includes(commandArgument)) {
-  console.error('Command [command] (upgrade, build, import, deploy) is required.');
-  return 1;
+  logger.error('Command [command] (upgrade, build, import, deploy) is required.');
+  process.exit(1);
 }
 const runAll = commandArgument === 'deploy';
 
 const pathArgument = args.find(a => ['-p', '--path'].includes(a));
 if (typeof pathArgument === 'undefined') {
-  console.error('Path argument is required. Use --path to specify the path to solution folder.');
-  return 1;
+  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  process.exit(1);
 }
 
 const pathIndex = args.indexOf(pathArgument) + 1;
 const path = args.at(pathIndex);
 if (typeof path === 'undefined') {
-  console.error('Path argument is required. Use --path to specify the path to solution folder.');
-  return 1;
+  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  process.exit(1);
 }
 
 const tick = performance.now();
@@ -60,19 +68,19 @@ function executeTasks() {
 
 var result = 0;
 try {
-  console.log('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' started.\n');
+  logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' started.\n');
   result = executeTasks();
   if (result === 0) {
-    console.log('[PCF Helper Run] ' + commandArgument + ' completed successfully!');
+    logger.log('[PCF Helper Run] ' + commandArgument + ' completed successfully!');
   } else {
-    console.log('[PCF Helper Run] ' + commandArgument + ' completed with errors.');
+    logger.log('[PCF Helper Run] ' + commandArgument + ' completed with errors.');
   }
 } catch (e) {
-  console.error('[PCF Helper Run] One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
+  logger.error('[PCF Helper Run] One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
   result = 1;
 } finally {
   const tock = performance.now();
-  console.log(formatMsToSec('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' finished in %is.', tock - tick));
+  logger.log(formatMsToSec('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' finished in %is.', tock - tick));
 }
 
 return result;

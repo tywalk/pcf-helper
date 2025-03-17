@@ -4,21 +4,33 @@ const buildTask = require('../tasks/build-pcf');
 const importTask = require('../tasks/import-pcf');
 const { formatMsToSec } = require('../util/performanceUtil');
 const version = require('../package.json').version;
+const logger = require('@tywalk/color-logger').default;
 const [, , ...args] = process.argv;
 
-console.log('PCF Helper version', version);
+const commandArgument = args.at(0)?.toLowerCase();
+if (['-v', '--version'].includes(commandArgument)) {
+  console.log('v%s', version);
+  return;
+}
+
+const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
+if (typeof verboseArgument !== 'undefined') {
+  logger.setDebug(true);
+}
+
+logger.log('PCF Helper version', version);
 
 const pathArgument = args.find(a => ['-p', '--path'].includes(a));
 if (typeof pathArgument === 'undefined') {
-  console.error('Path argument is required. Use --path to specify the path to solution folder.');
-  return 1;
+  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  process.exit(1);
 }
 
 const pathIndex = args.indexOf(pathArgument) + 1;
 const path = args.at(pathIndex);
 if (typeof path === 'undefined') {
-  console.error('Path argument is required. Use --path to specify the path to solution folder.');
-  return 1;
+  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  process.exit(1);
 }
 
 const tick = performance.now();
@@ -44,14 +56,14 @@ var result = 0;
 try {
   result = executeTasks();
   if (result === 0) {
-    console.log('Deploy complete!');
+    logger.log('Deploy complete!');
   }
 } catch (e) {
-  console.error('One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
+  logger.error('One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
   result = 1;
 } finally {
   const tock = performance.now();
-  console.log(formatMsToSec('Deploy finished in %is.', tock - tick));
+  logger.log(formatMsToSec('Deploy finished in %is.', tock - tick));
 }
 
 return result;
