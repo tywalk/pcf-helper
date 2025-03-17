@@ -36,8 +36,8 @@ function run(path, env, verbose) {
   const tock = performance.now();
 
   if (task.status === 0) {
-    logger.log('[PCF Helper] Import complete!');
-    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished in %is.\n', tock - tick));
+    logger.success('[PCF Helper] Import complete!');
+    logger.debug(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished in %is.\n', tock - tick));
   } else {
     if (task.error) {
       if (task.signal === 'SIGTERM') {
@@ -51,7 +51,7 @@ function run(path, env, verbose) {
     } else {
       logger.error('[PCF Helper] Unable to complete import: One or more errors ocurred.');
     }
-    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished with errors in %is.\n', tock - tick));
+    logger.debug(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Import finished with errors in %is.\n', tock - tick));
   }
   return task.status;
 }

@@ -21,8 +21,8 @@ function run(path) {
   const tock = performance.now();
 
   if (task.status === 0) {
-    logger.log('[PCF Helper] Upgrade complete!');
-    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Upgrade finished in %is.\n', tock - tick));
+    logger.success('[PCF Helper] Upgrade complete!');
+    logger.debug(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Upgrade finished in %is.\n', tock - tick));
   } else {
     if (task.error) {
       if (task.signal === 'SIGTERM') {
@@ -34,7 +34,7 @@ function run(path) {
     } else {
       logger.error('[PCF Helper] Unable to complete upgrade: One or more errors ocurred.');
     }
-    logger.log(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Upgrade finished with errors in %is.\n', tock - tick));
+    logger.debug(formatMsToSec('[PCF Helper] ' + formatTime(new Date()) + ' Upgrade finished with errors in %is.\n', tock - tick));
   }
   return task.status;
 }
