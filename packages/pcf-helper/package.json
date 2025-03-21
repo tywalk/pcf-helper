@@ -1,27 +1,32 @@
 {
   "name": "@tywalk/pcf-helper",
-  "version": "1.4.13",
+  "version": "1.4.14",
   "description": "Command line helper for building and publishing PCF controls to Dataverse.",
+  "types": "./types/",
   "repository": {
     "url": "git+https://github.com/tywalk/pcf-helper.git"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "tsc",
+    "upgrade": "npm version patch --no-git-tag-version",
+    "ready": "npm run upgrade && npm run build"
   },
   "keywords": [
     "pcf"
   ],
   "author": "tywalk",
   "bin": {
-    "pcf-helper-upgrade": "bin/upgrade.js",
-    "pcf-helper-build": "bin/build.js",
-    "pcf-helper-import": "bin/import.js",
-    "pcf-helper-deploy": "bin/deploy.js"
-  },
-  "dependencies": {
-    "@tywalk/color-logger": "^1.0.1"
+    "pcf-helper-upgrade": "dist/bin/upgrade.js",
+    "pcf-helper-build": "dist/bin/build.js",
+    "pcf-helper-import": "dist/bin/import.js",
+    "pcf-helper-deploy": "dist/bin/deploy.js",
+    "pcf-helper-init": "dist/bin/init.js"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "@types/node": "^22.13.11",
+    "@tywalk/color-logger": "^1.0.3",
+    "jest": "^29.7.0",
+    "typescript": "^5.8.2"
   }
 }

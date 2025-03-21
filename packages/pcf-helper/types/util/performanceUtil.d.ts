@@ -1,12 +1,4 @@
-const util = require('node:util');
-
-var formatter = new Intl.DateTimeFormat('en-US', {
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false
-});
-
+import { SpawnSyncReturns } from 'child_process';
 /**
  * Formats a number of milliseconds into seconds.
  *
@@ -15,11 +7,7 @@ var formatter = new Intl.DateTimeFormat('en-US', {
  *
  * @returns {string} The formatted number of seconds.
  */
-function formatMsToSec(format, ms) {
-  const seconds = ms / 1000;
-  return util.format(format, seconds);
-}
-
+declare function formatMsToSec(format: string, ms: number): string;
 /**
  * Formats a Date object into a human-readable string.
  *
@@ -27,11 +15,6 @@ function formatMsToSec(format, ms) {
  *
  * @returns {string} The formatted string.
  */
-function formatTime(date) {
-  return formatter.format(date);
-}
-
-module.exports = {
-  formatMsToSec,
-  formatTime
-}
+declare function formatTime(date: Date): string;
+declare function handleTaskCompletion(task: SpawnSyncReturns<Buffer<ArrayBufferLike>>, name: string, duration: number, verbose?: boolean): number;
+export { formatMsToSec, formatTime, handleTaskCompletion };

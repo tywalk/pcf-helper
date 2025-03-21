@@ -21,6 +21,7 @@ This tool requires the following:
   "upgrade": "pcf-helper-upgrade --path <path to pcf project folder>",
   "build": "pcf-helper-build --path <path to pcf project folder>",
   "import": "pcf-helper-import --path <path to pcf project folder> --environment <environment guid or url>",
-  "deploy": "pcf-helper-deploy --path <path to pcf project folder> --environment <environment guid or url>"
+  "deploy": "pcf-helper-deploy --path <path to pcf project folder> --environment <environment guid or url>",
+  "init": "pcf-helper-init --path <path to pcf project folder (optional)> --name <name of the pcf project> --publisher-name <powerapps publisher name> --publisher-prefix <powerapps publisher prefix>"
 },
 ```

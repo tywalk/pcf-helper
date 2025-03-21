@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-const task  = require('../tasks/build-pcf');
+import * as task from '../tasks/import-pcf';
 const version = require('../package.json').version;
-const logger = require('@tywalk/color-logger').default;
+import logger from '@tywalk/color-logger';
 const [, , ...args] = process.argv;
 
-const commandArgument = args.at(0)?.toLowerCase();
+const commandArgument = args.at(0)?.toLowerCase() ?? '';
 if (['-v', '--version'].includes(commandArgument)) {
   console.log('v%s', version);
   process.exit(0);
@@ -30,4 +30,11 @@ if (typeof path === 'undefined') {
   process.exit(1);
 }
 
-task.run(path);
+const envArgument = args.find(a => ['-env', '--environment'].includes(a)) ?? '';
+let envIndex = args.indexOf(envArgument) + 1;
+let env = '';
+if (envIndex > 0) {
+  env = args.at(envIndex) ?? '';
+}
+
+task.run(path, env);

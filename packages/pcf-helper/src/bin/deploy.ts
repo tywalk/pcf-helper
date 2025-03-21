@@ -1,16 +1,16 @@
 #!/usr/bin/env node
-const upgradeTask = require('../tasks/upgrade-pcf');
-const buildTask = require('../tasks/build-pcf');
-const importTask = require('../tasks/import-pcf');
-const { formatMsToSec } = require('../util/performanceUtil');
+import * as upgradeTask from '../tasks/upgrade-pcf';
+import * as buildTask from '../tasks/build-pcf';
+import * as importTask from '../tasks/import-pcf';
+import { formatMsToSec } from '../util/performanceUtil';
 const version = require('../package.json').version;
-const logger = require('@tywalk/color-logger').default;
+import logger from '@tywalk/color-logger';
 const [, , ...args] = process.argv;
 
-const commandArgument = args.at(0)?.toLowerCase();
+const commandArgument = args.at(0)?.toLowerCase() ?? '';
 if (['-v', '--version'].includes(commandArgument)) {
   console.log('v%s', version);
-  return;
+  process.exit(0);
 }
 
 const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
@@ -27,7 +27,7 @@ if (typeof pathArgument === 'undefined') {
 }
 
 const pathIndex = args.indexOf(pathArgument) + 1;
-const path = args.at(pathIndex);
+const path = args.at(pathIndex) as string;
 if (typeof path === 'undefined') {
   logger.error('Path argument is required. Use --path to specify the path to solution folder.');
   process.exit(1);
@@ -35,19 +35,19 @@ if (typeof path === 'undefined') {
 
 const tick = performance.now();
 
-const envArgument = args.find(a => ['-env', '--environment'].includes(a));
+const envArgument = args.find(a => ['-env', '--environment'].includes(a)) ?? '';
 let envIndex = args.indexOf(envArgument) + 1;
 let env = '';
 if (envIndex > 0) {
-  env = args.at(envIndex);
+  env = args.at(envIndex) ?? '';
 }
 
 function executeTasks() {
-  const upgradeResult = upgradeTask.run(path);
+  const upgradeResult = upgradeTask.run(path, typeof verboseArgument !== 'undefined');
   if (upgradeResult === 1) return 1;
-  const buildResult = buildTask.run(path);
+  const buildResult = buildTask.run(path, typeof verboseArgument !== 'undefined');
   if (buildResult === 1) return 1;
-  const importResult = importTask.run(path, env);
+  const importResult = importTask.run(path, env, typeof verboseArgument !== 'undefined');
   if (importResult === 1) return 1;
   return 0;
 }
@@ -58,7 +58,7 @@ try {
   if (result === 0) {
     logger.log('Deploy complete!');
   }
-} catch (e) {
+} catch (e: any) {
   logger.error('One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
   result = 1;
 } finally {
@@ -66,4 +66,4 @@ try {
   logger.log(formatMsToSec('Deploy finished in %is.', tock - tick));
 }
 
-return result;
+process.exit(result);
