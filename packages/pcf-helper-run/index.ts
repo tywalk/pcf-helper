@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import upgradeTask from '@tywalk/pcf-helper/dist/tasks/upgrade-pcf';
-import buildTask from '@tywalk/pcf-helper/dist/tasks/build-pcf';
-import importTask from '@tywalk/pcf-helper/dist/tasks/import-pcf';
-import initTask from '@tywalk/pcf-helper/dist/tasks/init-pcf';
+import * as upgradeTask from '@tywalk/pcf-helper/dist/tasks/upgrade-pcf';
+import * as buildTask from '@tywalk/pcf-helper/dist/tasks/build-pcf';
+import * as importTask from '@tywalk/pcf-helper/dist/tasks/import-pcf';
+import * as initTask from '@tywalk/pcf-helper/dist/tasks/init-pcf';
 import { Logger } from '@tywalk/color-logger';
 import { version } from './package.json';
 import { formatMsToSec, formatTime } from './util/performanceUtil';
