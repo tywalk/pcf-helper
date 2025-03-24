@@ -23,10 +23,10 @@ jobs:
       - run: npm run build
       - run: npm test
       - name: Upload build output
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: build-output
-          path: ./packages/pcf-helper-run
+          path: packages/pcf-helper-run
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
@@ -40,10 +40,10 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org/
       - name: Download build output
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: build-output
-          path: ./packages/pcf-helper-run
+          path: packages/pcf-helper-run
       - run: npm ci
       - run: npm publish --access public
         env:
