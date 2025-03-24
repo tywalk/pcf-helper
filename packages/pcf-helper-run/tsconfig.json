@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",                               /* Specify an output folder for all emitted files. */
+    "declarationDir": "./types",                      /* Specify the output directory for generated declaration files. */
+    "noImplicitAny": false
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "types"]
+}

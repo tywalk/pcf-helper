@@ -1,4 +1,4 @@
-const util = require('node:util');
+import util from 'util';
 
 var formatter = new Intl.DateTimeFormat('en-US', {
   hour: '2-digit',
@@ -15,7 +15,7 @@ var formatter = new Intl.DateTimeFormat('en-US', {
  *
  * @returns {string} The formatted number of seconds.
  */
-function formatMsToSec(format, ms) {
+function formatMsToSec(format: string, ms: number): string {
   const seconds = ms / 1000;
   return util.format(format, seconds);
 }
@@ -27,11 +27,11 @@ function formatMsToSec(format, ms) {
  *
  * @returns {string} The formatted string.
  */
-function formatTime(date) {
+function formatTime(date: Date): string {
   return formatter.format(date);
 }
 
-module.exports = {
+export {
   formatMsToSec,
   formatTime
 }

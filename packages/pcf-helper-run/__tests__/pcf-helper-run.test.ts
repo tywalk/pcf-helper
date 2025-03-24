@@ -1,8 +1,8 @@
-const { spawn } = require('child_process');
-const version = require('../package.json').version;
+import { spawn } from 'child_process';
+import { version } from '../package.json';
 
 test('displays version', (done) => {
-  const task = spawn('node', ['./index.js', '-v']);
+  const task = spawn('node', ['./dist/index.js', '-v']);
 
   let output = '';
   task.stdout.on('data', (data) => {

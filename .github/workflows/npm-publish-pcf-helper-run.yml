@@ -6,6 +6,9 @@ name: pcf-helper-run Package
 on:
   release:
     types: [created]
+  push:
+    tags:
+      - pcf-helper-run@v*
 
 jobs:
   build:
@@ -19,9 +22,10 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      - run: npm run build
       - run: npm test
   publish-npm:
-    # needs: build
+    needs: build
     runs-on: ubuntu-latest
     defaults:
       run:

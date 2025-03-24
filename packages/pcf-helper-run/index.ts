@@ -1,19 +1,20 @@
 #!/usr/bin/env node
-const upgradeTask = require('@tywalk/pcf-helper/tasks/upgrade-pcf');
-const buildTask = require('@tywalk/pcf-helper/tasks/build-pcf');
-const importTask = require('@tywalk/pcf-helper/tasks/import-pcf');
-const { Logger } = require('@tywalk/color-logger');
+import upgradeTask from '@tywalk/pcf-helper/tasks/upgrade-pcf';
+import buildTask from '@tywalk/pcf-helper/tasks/build-pcf';
+import importTask from '@tywalk/pcf-helper/tasks/import-pcf';
+// import initTask from '@tywalk/pcf-helper/tasks/init-pcf';
+import { Logger } from '@tywalk/color-logger';
 const version = require('./package.json').version;
-const { formatMsToSec, formatTime } = require('./util/performanceUtil');
+import { formatMsToSec, formatTime } from './util/performanceUtil';
 const [, , ...args] = process.argv;
 
-const commandArgument = args.at(0)?.toLowerCase();
+const commandArgument = args.at(0)?.toLowerCase() ?? '';
 if (['-v', '--version'].includes(commandArgument)) {
   console.log('v%s', version);
-  return;
+  process.exit(0);
 }
 
-const logger = new Logger();
+const logger = new Logger('log');
 
 const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
 if (typeof verboseArgument !== 'undefined') {
@@ -22,7 +23,7 @@ if (typeof verboseArgument !== 'undefined') {
 
 logger.log('PCF Helper Run version\n', version);
 
-if (typeof commandArgument === 'undefined' || !['upgrade', 'build', 'import', 'deploy'].includes(commandArgument)) {
+if (typeof commandArgument === 'undefined' || !['upgrade', 'build', 'import', 'deploy', 'init'].includes(commandArgument)) {
   logger.error('Command [command] (upgrade, build, import, deploy) is required.');
   process.exit(1);
 }
@@ -43,11 +44,11 @@ if (typeof path === 'undefined') {
 
 const tick = performance.now();
 
-const envArgument = args.find(a => ['-env', '--environment'].includes(a));
+const envArgument = args.find(a => ['-env', '--environment'].includes(a)) ?? '';
 let envIndex = args.indexOf(envArgument) + 1;
 let env = '';
 if (envIndex > 0) {
-  env = args.at(envIndex);
+  env = args.at(envIndex) ?? '';
 }
 
 function executeTasks() {
@@ -63,6 +64,10 @@ function executeTasks() {
     const importResult = importTask.run(path, env);
     if (importResult === 1) return 1;
   }
+  // if (commandArgument === 'init') {
+  //   const importResult = initTask.run(path, env);
+  //   if (importResult === 1) return 1;
+  // }
   return 0;
 }
 
@@ -75,7 +80,7 @@ try {
   } else {
     logger.log('[PCF Helper Run] ' + commandArgument + ' completed with errors.');
   }
-} catch (e) {
+} catch (e: any) {
   logger.error('[PCF Helper Run] One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
   result = 1;
 } finally {
@@ -83,4 +88,4 @@ try {
   logger.log(formatMsToSec('[PCF Helper Run] ' + formatTime(new Date()) + ' ' + commandArgument + ' finished in %is.', tock - tick));
 }
 
-return result;
+process.exit(result);
