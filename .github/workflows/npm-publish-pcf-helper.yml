@@ -4,8 +4,6 @@
 name: pcf-helper Package
 
 on:
-  release:
-    types: [created]
   push:
     tags:
       - pcf-helper@v*
@@ -24,6 +22,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
+      - name: Upload build output
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-output
+          path: ./
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
@@ -36,6 +39,10 @@ jobs:
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+      - name: Download build output
+        uses: actions/download-artifact@v2
+        with:
+          name: build-output
       - run: npm ci
       - run: npm publish --access public
         env:

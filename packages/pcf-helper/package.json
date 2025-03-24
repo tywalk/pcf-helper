@@ -1,6 +1,6 @@
 {
   "name": "@tywalk/pcf-helper",
-  "version": "1.4.15",
+  "version": "1.4.16",
   "description": "Command line helper for building and publishing PCF controls to Dataverse.",
   "types": "./types/",
   "files": [
