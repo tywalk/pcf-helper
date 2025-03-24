@@ -27,7 +27,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: build-output
-          path: ./packages/pcf-helper/
+          path: packages/pcf-helper/
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
@@ -44,7 +44,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: build-output
-          path: ./packages/pcf-helper/
+          path: packages/pcf-helper/
       - run: npm ci
       - run: npm publish --access public
         env:
