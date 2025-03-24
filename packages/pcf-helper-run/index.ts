@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import upgradeTask from '@tywalk/pcf-helper/tasks/upgrade-pcf';
-import buildTask from '@tywalk/pcf-helper/tasks/build-pcf';
-import importTask from '@tywalk/pcf-helper/tasks/import-pcf';
-// import initTask from '@tywalk/pcf-helper/tasks/init-pcf';
+import upgradeTask from '@tywalk/pcf-helper/dist/tasks/upgrade-pcf';
+import buildTask from '@tywalk/pcf-helper/dist/tasks/build-pcf';
+import importTask from '@tywalk/pcf-helper/dist/tasks/import-pcf';
+import initTask from '@tywalk/pcf-helper/dist/tasks/init-pcf';
 import { Logger } from '@tywalk/color-logger';
-const version = require('./package.json').version;
+import { version } from './package.json';
 import { formatMsToSec, formatTime } from './util/performanceUtil';
 const [, , ...args] = process.argv;
 
@@ -64,10 +64,10 @@ function executeTasks() {
     const importResult = importTask.run(path, env);
     if (importResult === 1) return 1;
   }
-  // if (commandArgument === 'init') {
-  //   const importResult = initTask.run(path, env);
-  //   if (importResult === 1) return 1;
-  // }
+  if (commandArgument === 'init') {
+    const importResult = initTask.run(path, env);
+    if (importResult === 1) return 1;
+  }
   return 0;
 }
 
