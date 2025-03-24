@@ -1,8 +1,8 @@
-const { spawn } = require('child_process');
-const version = require('../package.json').version;
+import { spawn } from 'child_process';
+import { version } from '../package.json';
 
-test('build displays version', (done) => {
-  const task = spawn('node', ['./bin/build.js', '-v']);
+test('deploy displays version', (done) => {
+  const task = spawn('node', ['./dist/bin/deploy.js', '-v']);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -21,8 +21,8 @@ test('build displays version', (done) => {
   });
 });
 
-test('build errors if no path is provided', (done) => {
-  const task = spawn('node', ['./bin/build.js', '-p']);
+test('deploy errors if no path is provided', (done) => {
+  const task = spawn('node', ['./dist/bin/deploy.js', '-p']);
 
   let output = '';
   task.stdout.on('data', (data) => {

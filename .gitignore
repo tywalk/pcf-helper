@@ -8,6 +8,8 @@
 
 # output directory
 /out
+**/dist
+**/types
 
 # msbuild output directories
 /bin

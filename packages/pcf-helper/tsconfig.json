@@ -4,5 +4,6 @@
     "outDir": "./dist",                               /* Specify an output folder for all emitted files. */
     "declarationDir": "./types",                      /* Specify the output directory for generated declaration files. */
   },
-  "include": ["src/bin/**/*.ts"],
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist", "types"]
 }

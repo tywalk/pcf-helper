@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import * as task from '../tasks/import-pcf';
-const version = require('../package.json').version;
+import * as task from '../tasks/upgrade-pcf';
+import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
 const [, , ...args] = process.argv;
 
@@ -30,11 +30,4 @@ if (typeof path === 'undefined') {
   process.exit(1);
 }
 
-const envArgument = args.find(a => ['-env', '--environment'].includes(a)) ?? '';
-let envIndex = args.indexOf(envArgument) + 1;
-let env = '';
-if (envIndex > 0) {
-  env = args.at(envIndex) ?? '';
-}
-
-task.run(path, env);
+task.run(path, verboseArgument !== undefined);

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import * as task from '../tasks/upgrade-pcf';
-const version = require('../package.json').version;
+import * as task from '../tasks/build-pcf';
+import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
 const [, , ...args] = process.argv;
 

@@ -1,8 +1,8 @@
-const { spawn } = require('child_process');
+import { spawn } from 'child_process';
 const version = require('../package.json').version;
 
 test('upgrade displays version', (done) => {
-  const task = spawn('node', ['./bin/upgrade.js', '-v']);
+  const task = spawn('node', ['./dist/bin/upgrade.js', '-v']);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -18,7 +18,7 @@ test('upgrade displays version', (done) => {
 });
 
 test('upgrade errors if no path is provided', (done) => {
-  const task = spawn('node', ['./bin/upgrade.js', '-p']);
+  const task = spawn('node', ['./dist/bin/upgrade.js', '-p']);
 
   let output = '';
   task.stdout.on('data', (data) => {

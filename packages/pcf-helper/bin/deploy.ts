@@ -3,7 +3,7 @@ import * as upgradeTask from '../tasks/upgrade-pcf';
 import * as buildTask from '../tasks/build-pcf';
 import * as importTask from '../tasks/import-pcf';
 import { formatMsToSec } from '../util/performanceUtil';
-const version = require('../package.json').version;
+import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
 const [, , ...args] = process.argv;
 

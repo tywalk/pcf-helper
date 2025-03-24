@@ -3,6 +3,10 @@
   "version": "1.4.14",
   "description": "Command line helper for building and publishing PCF controls to Dataverse.",
   "types": "./types/",
+  "files": [
+    "dist",
+    "types"
+  ],
   "repository": {
     "url": "git+https://github.com/tywalk/pcf-helper.git"
   },
@@ -24,9 +28,11 @@
     "pcf-helper-init": "dist/bin/init.js"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.14",
     "@types/node": "^22.13.11",
     "@tywalk/color-logger": "^1.0.3",
     "jest": "^29.7.0",
+    "ts-jest": "^29.2.6",
     "typescript": "^5.8.2"
   }
 }
