@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "@tywalk/color-logger": "^1.0.3",
-    "@tywalk/pcf-helper": "^1.4.16"
+    "@tywalk/pcf-helper": "^1.4.20"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
