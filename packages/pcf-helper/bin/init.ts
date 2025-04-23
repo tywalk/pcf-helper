@@ -51,4 +51,4 @@ if (typeof pathArgument !== 'undefined') {
   path = args.at(pathIndex) ?? '';
 }
 
-task.run(path, name, publisherName, publisherPrefix, verboseArgument !== undefined);
+task.runInit(path, name, publisherName, publisherPrefix, verboseArgument !== undefined);

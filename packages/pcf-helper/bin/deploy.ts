@@ -43,11 +43,11 @@ if (envIndex > 0) {
 }
 
 function executeTasks() {
-  const upgradeResult = upgradeTask.run(path, typeof verboseArgument !== 'undefined');
+  const upgradeResult = upgradeTask.runUpgrade(path, typeof verboseArgument !== 'undefined');
   if (upgradeResult === 1) return 1;
-  const buildResult = buildTask.run(path, typeof verboseArgument !== 'undefined');
+  const buildResult = buildTask.runBuild(path, typeof verboseArgument !== 'undefined');
   if (buildResult === 1) return 1;
-  const importResult = importTask.run(path, env, typeof verboseArgument !== 'undefined');
+  const importResult = importTask.runImport(path, env, typeof verboseArgument !== 'undefined');
   if (importResult === 1) return 1;
   return 0;
 }

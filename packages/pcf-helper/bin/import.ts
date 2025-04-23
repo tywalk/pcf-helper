@@ -37,4 +37,4 @@ if (envIndex > 0) {
   env = args.at(envIndex) ?? '';
 }
 
-task.run(path, env);
+task.runImport(path, env);

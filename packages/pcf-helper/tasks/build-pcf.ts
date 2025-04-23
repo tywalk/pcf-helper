@@ -10,7 +10,7 @@ import logger from '@tywalk/color-logger';
  *
  * @returns {number} The exit code of the spawned process.
  */
-function run(path: string, verbose: boolean): number {
+function runBuild(path: string, verbose: boolean): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting build...\n');
   const tick = performance.now();
   const task = spawnSync('dotnet build', ['--restore', '-c', 'Release', path], {
@@ -23,4 +23,4 @@ function run(path: string, verbose: boolean): number {
   return handleTaskCompletion(task, 'build', performance.now() - tick, verbose);
 }
 
-export { run };
+export { runBuild };

@@ -10,7 +10,7 @@ import logger from '@tywalk/color-logger';
  *
  * @returns {number} The exit code of the spawned process.
  */
-function run(path: string, verbose?: boolean): number {
+function runUpgrade(path: string, verbose?: boolean): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting upgrade...\n');
   const tick = performance.now();
   const task = spawnSync(`pac solution version -s Solution -sp ${path} && pac pcf version -s Manifest && npm version patch --no-git-tag-version`, {
@@ -23,4 +23,4 @@ function run(path: string, verbose?: boolean): number {
   return handleTaskCompletion(task, 'upgrade', performance.now() - tick, verbose);
 }
 
-export { run }
+export { runUpgrade }

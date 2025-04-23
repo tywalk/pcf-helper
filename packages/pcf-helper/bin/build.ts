@@ -30,4 +30,4 @@ if (typeof path === 'undefined') {
   process.exit(1);
 }
 
-task.run(path, verboseArgument !== undefined);
+task.runBuild(path, verboseArgument !== undefined);

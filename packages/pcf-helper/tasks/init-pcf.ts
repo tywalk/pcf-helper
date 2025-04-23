@@ -18,7 +18,7 @@ function pcfExistsInParent(path: string) {
   throw new Error('PCF project not found.');
 }
 
-function run(path: string, name: string, publisherName: string, publisherPrefix: string, verbose: boolean): number {
+function runInit(path: string, name: string, publisherName: string, publisherPrefix: string, verbose: boolean): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting init...\n');
   const tick = performance.now();
 
@@ -51,4 +51,4 @@ function run(path: string, name: string, publisherName: string, publisherPrefix:
   return handleTaskCompletion(packageTask, 'init', performance.now() - tick, verbose);
 }
 
-export { run };
+export { runInit };

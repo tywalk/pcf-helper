@@ -14,7 +14,7 @@ import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
  * @returns {number} The exit status of the import process.
  */
 
-function run(path: string, env: string, verbose?: boolean): number {
+function runImport(path: string, env: string, verbose?: boolean): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting import...\n');
   const tick = performance.now();
   if (!env) {
@@ -37,4 +37,4 @@ function run(path: string, env: string, verbose?: boolean): number {
   return handleTaskCompletion(task, 'import', performance.now() - tick, verbose);
 }
 
-export { run };
+export { runImport };
