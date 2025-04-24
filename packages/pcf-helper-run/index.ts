@@ -63,6 +63,7 @@ function executeTasks() {
     const name = getArgValue(args, ['-n', '--name']);
     const publisherName = getArgValue(args, ['-pn', '--publisher-name']);
     const publisherPrefix = getArgValue(args, ['-pp', '--publisher-prefix']);
+    const npm = getArgValue(args, ['-npm', '--run-npm-install'], 'true');
     if (typeof name === 'undefined') {
       logger.error('Name argument is required. Use --name to specify the name of the control.');
       process.exit(1);
@@ -75,7 +76,7 @@ function executeTasks() {
       logger.error('Publisher Prefix argument is required. Use --publisher-prefix to specify the name of the control.');
       process.exit(1);
     }
-    const initResult = tasks.runInit(path as string, name, publisherName, publisherPrefix, isVerbose);
+    const initResult = tasks.runInit(path as string, name, publisherName, publisherPrefix, npm === 'true', isVerbose);
     if (initResult === 1) return 1;
   }
   return 0;

@@ -5,12 +5,12 @@ export function getArg(args: string[], arg: string): string | undefined {
     }
     return undefined;
 }
-export function getArgValue(args: string[], argOpts: string[]): string | undefined {
+export function getArgValue(args: string[], argOpts: string[], defaultIfExists?: any): string | undefined {
   const arg = args.find(a => argOpts.includes(a));
   if (typeof arg === 'undefined') {
     return undefined;
   }
   
   const argIndex = args.indexOf(arg) + 1;
-  return args.at(argIndex);
+  return args.at(argIndex) ?? defaultIfExists;
 }
