@@ -37,6 +37,7 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
 
   let pathFiles = fs.readdirSync(path);
   let atRoot = pathFiles.some(file => extname(file).toLowerCase() === '.pcfproj');
+  name += 'PCF'; // Prevent cdsproj from conflicting with pcfproj
   const cdsPath = atRoot ? join(path, 'Solutions', name) : join(path, name);
 
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Initializing solution...\n');

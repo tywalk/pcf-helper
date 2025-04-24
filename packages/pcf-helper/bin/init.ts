@@ -2,6 +2,7 @@
 import * as task from '../tasks/init-pcf';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
+import { getArgValue } from '../util/argumentUtil';
 const [, , ...args] = process.argv;
 
 const commandArgument = args.at(0)?.toLowerCase() ?? '';
@@ -17,45 +18,15 @@ if (typeof verboseArgument !== 'undefined') {
 
 logger.log('PCF Helper version', version);
 
-const nameArgument = args.find(a => ['-n', '--name'].includes(a));
-if (typeof nameArgument === 'undefined') {
-  logger.error('Name argument is required. Use --name to specify the name of the control.');
-  process.exit(1);
-}
-
-const nameIndex = args.indexOf(nameArgument) + 1;
-const name = args.at(nameIndex);
+const name = getArgValue(args, ['-n', '--name']);
 if (typeof name === 'undefined') {
-  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+  logger.error('Name argument is required. Use --name to specify the name of the PCF control.');
   process.exit(1);
 }
 
-let publisherName = '';
-const publisherNameArgument = args.find(a => ['-pn', '--publisher-name'].includes(a));
-if (typeof publisherNameArgument !== 'undefined') {
-  const publisherNameIndex = args.indexOf(publisherNameArgument) + 1;
-  publisherName = args.at(publisherNameIndex) ?? '';
-}
-
-let publisherPrefix = '';
-const publisherPrefixArgument = args.find(a => ['-pp', '--publisher-prefix'].includes(a));
-if (typeof publisherPrefixArgument !== 'undefined') {
-  const publisherPrefixIndex = args.indexOf(publisherPrefixArgument) + 1;
-  publisherPrefix = args.at(publisherPrefixIndex) ?? '';
-}
-
-let path = '';
-const pathArgument = args.find(a => ['-p', '--path'].includes(a));
-if (typeof pathArgument !== 'undefined') {
-  const pathIndex = args.indexOf(pathArgument) + 1;
-  path = args.at(pathIndex) ?? '';
-}
-
-let npm = '';
-const npmArgument = args.find(a => ['-npm', '--run-npm-install'].includes(a));
-if (typeof npmArgument !== 'undefined') {
-  const pathIndex = args.indexOf(npmArgument) + 1;
-  npm = args.at(pathIndex) ?? '';
-}
+const publisherName = getArgValue(args, ['-pn', '--publisher-name']) ?? '';
+const publisherPrefix = getArgValue(args, ['-pp', '--publisher-prefix']) ?? '';
+const path = getArgValue(args, ['-p', '--path']) ?? '';
+const npm = getArgValue(args, ['-npm', '--run-npm-install'], 'true');
 
 task.runInit(path, name, publisherName, publisherPrefix, npm === 'true', verboseArgument !== undefined);

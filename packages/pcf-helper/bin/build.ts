@@ -2,6 +2,7 @@
 import * as task from '../tasks/build-pcf';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
+import { getArgValue } from '../util/argumentUtil';
 const [, , ...args] = process.argv;
 
 const commandArgument = args.at(0)?.toLowerCase() ?? '';
@@ -17,14 +18,7 @@ if (typeof verboseArgument !== 'undefined') {
 
 logger.log('PCF Helper version', version);
 
-const pathArgument = args.find(a => ['-p', '--path'].includes(a));
-if (typeof pathArgument === 'undefined') {
-  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
-  process.exit(1);
-}
-
-const pathIndex = args.indexOf(pathArgument) + 1;
-const path = args.at(pathIndex);
+const path = getArgValue(args, ['-p', '--path']);
 if (typeof path === 'undefined') {
   logger.error('Path argument is required. Use --path to specify the path to solution folder.');
   process.exit(1);

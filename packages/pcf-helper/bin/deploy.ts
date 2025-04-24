@@ -5,6 +5,7 @@ import * as importTask from '../tasks/import-pcf';
 import { formatMsToSec } from '../util/performanceUtil';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
+import { getArgValue } from '../util/argumentUtil';
 const [, , ...args] = process.argv;
 
 const commandArgument = args.at(0)?.toLowerCase() ?? '';
@@ -35,12 +36,7 @@ if (typeof path === 'undefined') {
 
 const tick = performance.now();
 
-const envArgument = args.find(a => ['-env', '--environment'].includes(a)) ?? '';
-let envIndex = args.indexOf(envArgument) + 1;
-let env = '';
-if (envIndex > 0) {
-  env = args.at(envIndex) ?? '';
-}
+const env = getArgValue(args, ['-env', '--environment']) ?? '';
 
 function executeTasks() {
   const upgradeResult = upgradeTask.runUpgrade(path, typeof verboseArgument !== 'undefined');
