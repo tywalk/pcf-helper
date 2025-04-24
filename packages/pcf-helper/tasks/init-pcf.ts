@@ -18,16 +18,13 @@ function pcfExistsInParent(path: string) {
   throw new Error('PCF project not found.');
 }
 
-function runInit(path: string, name: string, publisherName: string, publisherPrefix: string, verbose: boolean): number {
+function runInit(path: string, name: string, publisherName: string, publisherPrefix: string, npm: boolean, verbose: boolean): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting init...\n');
   const tick = performance.now();
 
   path = path ?? process.cwd();
-  let pathFiles = fs.readdirSync(path);
-  let atRoot = pathFiles.some(file => extname(file).toLowerCase() === '.pcfproj');
-  const cdsPath = atRoot ? join(path, 'Solutions', name) : join(path, name);
 
-  const initTask = spawnSync('pac solution init', ['-pn', publisherName, '-pp', publisherPrefix, '-o', cdsPath], {
+  const initTask = spawnSync('pac pcf init', ['-ns', publisherPrefix, '-n', name, '-t', 'field', '-fw', 'react', '-o', path, '-npm', npm ? 'true' : 'false'], {
     cwd: process.cwd(),
     stdio: 'inherit',
     shell: true,
@@ -38,12 +35,30 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
     return handleTaskCompletion(initTask, 'init', performance.now() - tick, verbose);
   }
 
+  let pathFiles = fs.readdirSync(path);
+  let atRoot = pathFiles.some(file => extname(file).toLowerCase() === '.pcfproj');
+  const cdsPath = atRoot ? join(path, 'Solutions', name) : join(path, name);
+
+  logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Initializing solution...\n');
+  const solutionTask = spawnSync('pac solution init', ['-pn', publisherName, '-pp', publisherPrefix, '-o', cdsPath], {
+    cwd: process.cwd(),
+    stdio: 'inherit',
+    shell: true,
+    timeout: 1000 * 60 * 5, // 5 minutes
+  });
+
+  if (solutionTask.status !== 0) {
+    return handleTaskCompletion(solutionTask, 'init', performance.now() - tick, verbose);
+  }
+
   if (!atRoot) {
     path = pcfExistsInParent(path);
   }
 
-  const packageTask = spawnSync('pac solution add-reference', ['-p', path], {
-    cwd: process.cwd(),
+  const pcfProjPath = fs.realpathSync(path);
+  logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Adding solution reference...', pcfProjPath);
+  const packageTask = spawnSync('pac solution add-reference', ['-p', pcfProjPath], {
+    cwd: cdsPath,
     stdio: 'inherit',
     shell: true,
     timeout: 1000 * 60 * 5, // 5 minutes

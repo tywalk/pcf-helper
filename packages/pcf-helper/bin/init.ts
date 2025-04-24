@@ -51,4 +51,11 @@ if (typeof pathArgument !== 'undefined') {
   path = args.at(pathIndex) ?? '';
 }
 
-task.runInit(path, name, publisherName, publisherPrefix, verboseArgument !== undefined);
+let npm = '';
+const npmArgument = args.find(a => ['-npm', '--run-npm-install'].includes(a));
+if (typeof npmArgument !== 'undefined') {
+  const pathIndex = args.indexOf(npmArgument) + 1;
+  npm = args.at(pathIndex) ?? '';
+}
+
+task.runInit(path, name, publisherName, publisherPrefix, npm === 'true', verboseArgument !== undefined);
