@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import tasks from '@tywalk/pcf-helper';
+import * as tasks from '@tywalk/pcf-helper';
 import { Logger } from '@tywalk/color-logger';
 import { version } from './package.json';
 import { formatMsToSec, formatTime } from './util/performanceUtil';

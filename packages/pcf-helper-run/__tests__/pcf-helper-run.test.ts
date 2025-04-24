@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { version } from '../package.json';
+import * as tasks from '@tywalk/pcf-helper';
 
 test('displays version', (done) => {
   const task = spawn('node', ['./dist/index.js', '-v']);
@@ -54,4 +55,9 @@ test('errors if incorrect command is provided', (done) => {
     expect(code).toBe(1);
     done();
   });
+});
+
+test('runBuild exists', () => {
+  const exists = typeof tasks?.runBuild === 'function';
+  expect(exists).toBe(true);
 });
