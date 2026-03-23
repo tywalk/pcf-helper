@@ -1,6 +1,6 @@
 {
   "name": "@tywalk/pcf-helper",
-  "version": "1.4.22",
+  "version": "1.4.26",
   "description": "Command line helper for building and publishing PCF controls to Dataverse.",
   "main": "dist/index.js",
   "types": "./types/",
@@ -26,7 +26,8 @@
     "pcf-helper-build": "dist/bin/build.js",
     "pcf-helper-import": "dist/bin/import.js",
     "pcf-helper-deploy": "dist/bin/deploy.js",
-    "pcf-helper-init": "dist/bin/init.js"
+    "pcf-helper-init": "dist/bin/init.js",
+    "pcf-helper-session": "dist/bin/session.js"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
@@ -36,6 +37,8 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@tywalk/color-logger": "^1.0.3"
+    "@tywalk/color-logger": "^1.0.3",
+    "commander": "^14.0.3",
+    "playwright": "^1.58.2"
   }
 }

@@ -1,16 +1,12 @@
 import { spawn } from 'child_process';
 import { version } from '../package.json';
 
-test('deploy displays version', (done) => {
-  const task = spawn('node', ['./dist/bin/deploy.js', '-v']);
+test('session displays version', (done) => {
+  const task = spawn('node', ['./dist/bin/session.js', '-v']);
 
   let output = '';
   task.stdout.on('data', (data) => {
     output += data.toString();
-  });
-
-  task.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
   });
 
   task.on('close', (code) => {
@@ -21,8 +17,8 @@ test('deploy displays version', (done) => {
   });
 });
 
-test('deploy errors if no path is provided', (done) => {
-  const task = spawn('node', ['./dist/bin/deploy.js', '-p']);
+test('session errors if no args are provided', (done) => {
+  const task = spawn('node', ['./dist/bin/session.js', '-e']);
 
   let output = '';
   task.stdout.on('data', (data) => {

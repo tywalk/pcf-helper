@@ -7,17 +7,18 @@ import logger from '@tywalk/color-logger';
  *
  * @param {string} path The path to the project folder containing the pcfproj.json file.
  * @param {boolean} verbose - If true, additional debug information is logged.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the build process.
  *
  * @returns {number} The exit code of the spawned process.
  */
-function runBuild(path: string, verbose: boolean): number {
+function runBuild(path: string, verbose: boolean, timeout?: number): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting build...\n');
   const tick = performance.now();
   const task = spawnSync('dotnet build', ['--restore', '-c', 'Release', path], {
     cwd: process.cwd(),
     stdio: 'inherit',
     shell: true,
-    timeout: 1000 * 60 * 5 // 5 minutes
+    timeout: timeout ?? 1000 * 60 * 5 // 5 minutes
   });
   
   return handleTaskCompletion(task, 'build', performance.now() - tick, verbose);

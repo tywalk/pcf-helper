@@ -25,3 +25,9 @@ This tool requires the following:
   "init": "pcf-helper-init --path <path to pcf project folder (optional)> --name <name of the pcf project> --publisher-name <powerapps publisher name> --publisher-prefix <powerapps publisher prefix>"
 },
 ```
+
+## Contributing
+
+### Deployment
+
+  

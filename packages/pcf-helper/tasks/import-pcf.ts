@@ -10,11 +10,12 @@ import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
  * @param {string} path - The path to the solution folder containing the build output.
  * @param {string} env - The environment identifier (GUID or URL) where the solution will be imported.
  * @param {boolean} verbose - If true, additional debug information is logged.
+ * @param {number} [timeout] - Optional timeout in milliseconds for the import process.
  *
  * @returns {number} The exit status of the import process.
  */
 
-function runImport(path: string, env: string, verbose?: boolean): number {
+function runImport(path: string, env: string, verbose?: boolean, timeout?: number): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting import...\n');
   const tick = performance.now();
   if (!env) {
@@ -31,7 +32,7 @@ function runImport(path: string, env: string, verbose?: boolean): number {
     cwd: process.cwd(),
     stdio: 'inherit',
     shell: true,
-    timeout: 1000 * 60 * 5, // 5 minutes
+    timeout: timeout ?? 1000 * 60 * 5, // 5 minutes
   });
 
   return handleTaskCompletion(task, 'import', performance.now() - tick, verbose);

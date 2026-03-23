@@ -14,6 +14,15 @@ if (['-v', '--version'].includes(commandArgument)) {
   process.exit(0);
 }
 
+const timeout = getArgValue(args, ['-t', '--timeout']);
+if (typeof timeout !== 'undefined') {
+  const timeoutNumber = Number(timeout);
+  if (isNaN(timeoutNumber) || timeoutNumber <= 0) {
+    logger.error('Timeout argument must be a positive number representing milliseconds.');
+    process.exit(1);
+  }
+}
+
 const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
 if (typeof verboseArgument !== 'undefined') {
   logger.setDebug(true);
@@ -41,9 +50,9 @@ const env = getArgValue(args, ['-env', '--environment']) ?? '';
 function executeTasks() {
   const upgradeResult = upgradeTask.runUpgrade(path, typeof verboseArgument !== 'undefined');
   if (upgradeResult === 1) return 1;
-  const buildResult = buildTask.runBuild(path, typeof verboseArgument !== 'undefined');
+  const buildResult = buildTask.runBuild(path, typeof verboseArgument !== 'undefined', typeof timeout !== 'undefined' ? Number(timeout) : undefined);
   if (buildResult === 1) return 1;
-  const importResult = importTask.runImport(path, env, typeof verboseArgument !== 'undefined');
+  const importResult = importTask.runImport(path, env, typeof verboseArgument !== 'undefined', typeof timeout !== 'undefined' ? Number(timeout) : undefined);
   if (importResult === 1) return 1;
   return 0;
 }

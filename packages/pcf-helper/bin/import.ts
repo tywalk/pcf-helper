@@ -11,6 +11,15 @@ if (['-v', '--version'].includes(commandArgument)) {
   process.exit(0);
 }
 
+const timeout = getArgValue(args, ['-t', '--timeout']);
+if (typeof timeout !== 'undefined') {
+  const timeoutNumber = Number(timeout);
+  if (isNaN(timeoutNumber) || timeoutNumber <= 0) {
+    logger.error('Timeout argument must be a positive number representing milliseconds.');
+    process.exit(1);
+  }
+}
+
 const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
 if (typeof verboseArgument !== 'undefined') {
   logger.setDebug(true);
@@ -26,4 +35,4 @@ if (typeof path === 'undefined') {
 
 const env = getArgValue(args, ['-env', '--environment']) ?? '';
 
-task.runImport(path, env);
+task.runImport(path, env, verboseArgument !== undefined, typeof timeout !== 'undefined' ? Number(timeout) : undefined);

@@ -11,7 +11,7 @@ test('upgrade displays version', (done) => {
 
   task.on('close', (code) => {
     console.log(output);
-    expect(output).toContain(version);
+    expect(output).toContain(`v${version}`);
     expect(code).toBe(0);
     done();
   });
