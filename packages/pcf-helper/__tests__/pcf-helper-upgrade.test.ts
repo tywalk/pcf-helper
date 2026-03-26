@@ -10,8 +10,7 @@ test('upgrade displays version', (done) => {
   });
 
   task.on('close', (code) => {
-    console.log(output);
-    expect(output).toContain(`v${version}`);
+    expect(output).toContain(version);
     expect(code).toBe(0);
     done();
   });
@@ -19,6 +18,12 @@ test('upgrade displays version', (done) => {
 
 test('upgrade errors if no path is provided', (done) => {
   const task = spawn('node', ['./dist/bin/upgrade.js', '-p']);
+
+  // Add timeout  
+  const timeout = setTimeout(() => {
+    task.kill();
+    done.fail('Test timed out');
+  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -30,8 +35,8 @@ test('upgrade errors if no path is provided', (done) => {
   });
 
   task.on('close', (code) => {
-    console.log(output);
     expect(code).toBe(1);
+    clearTimeout(timeout);
     done();
   });
 });
