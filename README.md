@@ -8,12 +8,12 @@ Command-line tools for **Power Platform Component Framework (PCF)** development,
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Features](#features)
-- [Packages](#packages)
-- [Requirements](#requirements)
-- [Quick Start](#quick-start)
-- [Documentation](#documentation)
-- [Testing](#testing)
+- [Features](#-features)
+- [Packages](#-packages)
+- [Requirements](#-requirements)
+- [Quick Start](#-quick-start)
+- [Documentation](#-documentation)
+- [Testing](#-testing)
 
 ## Overview
 
