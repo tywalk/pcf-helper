@@ -1,19 +1,22 @@
 # This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
 # For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
 
-name: pcf-helper-run Package
-
+name: Release pcf-helper-run
 on:
   push:
-    tags:
-      - pcf-helper-run@v*
+    branches:
+      - master
+    paths:
+      - "packages/pcf-helper-run/**"
 
 permissions:
   id-token: write # Required for OIDC
-  contents: read
+  contents: write
+  issues: write
+  pull-requests: write
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -26,27 +29,22 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm test
-      - name: Upload build output
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: ./packages/pcf-helper-run/
-  publish-npm:
-    needs: build
+  release:
+    needs: test
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: ./packages/pcf-helper-run
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # semantic-release needs full git history
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
-      - name: Download build output
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-          path: ./packages/pcf-helper-run/
       - run: npm ci
-      - run: npm publish --access public
+      - run: npm run build
+      - run: npm test
+      - run: npx semantic-release
