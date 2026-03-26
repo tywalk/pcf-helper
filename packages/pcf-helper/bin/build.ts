@@ -2,35 +2,35 @@
 import * as task from '../tasks/build-pcf';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
-import { getArgValue } from '../util/argumentUtil';
-const [, , ...args] = process.argv;
+import { Command } from 'commander';
 
-const commandArgument = args.at(0)?.toLowerCase() ?? '';
-if (['-v', '--version'].includes(commandArgument)) {
-  console.log('v%s', version);
-  process.exit(0);
-}
+const program = new Command();
 
-const timeout = getArgValue(args, ['-t', '--timeout']);
-if (typeof timeout !== 'undefined') {
-  const timeoutNumber = Number(timeout);
-  if (isNaN(timeoutNumber) || timeoutNumber <= 0) {
-    logger.error('Timeout argument must be a positive number representing milliseconds.');
-    process.exit(1);
-  }
-}
+program
+  .name('pcf-helper-build')
+  .description('Build PCF controls')
+  .version(version, '-v, --version')
+  .option('-V, --verbose', 'enable verbose logging')
+  .option('-t, --timeout <milliseconds>', 'timeout in milliseconds', (value: string) => {
+    const num = Number(value);
+    if (isNaN(num) || num <= 0) {
+      throw new Error('Timeout must be a positive number');
+    }
+    return value;
+  })
+  .requiredOption('-p, --path <path>', 'path to solution folder')
+  .parse();
 
-const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
-if (typeof verboseArgument !== 'undefined') {
+const options = program.opts();
+
+if (options.verbose) {
   logger.setDebug(true);
 }
 
 logger.log('PCF Helper version', version);
 
-const path = getArgValue(args, ['-p', '--path']);
-if (typeof path === 'undefined') {
-  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
-  process.exit(1);
-}
-
-task.runBuild(path, verboseArgument !== undefined, typeof timeout !== 'undefined' ? Number(timeout) : undefined);
+task.runBuild(
+  options.path,
+  options.verbose || false,
+  options.timeout ? Number(options.timeout) : undefined
+);

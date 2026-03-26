@@ -2,26 +2,24 @@
 import * as task from '../tasks/upgrade-pcf';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
-import { getArgValue } from '../util/argumentUtil';
-const [, , ...args] = process.argv;
+import { Command } from 'commander';
 
-const commandArgument = args.at(0)?.toLowerCase() ?? '';
-if (['-v', '--version'].includes(commandArgument)) {
-  console.log('v%s', version);
-  process.exit(0);
-}
+const program = new Command();
 
-const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
-if (typeof verboseArgument !== 'undefined') {
+program
+  .name('pcf-helper-upgrade')
+  .description('Upgrade PCF controls')
+  .version(version, '-v, --version')
+  .option('-V, --verbose', 'enable verbose logging')
+  .requiredOption('-p, --path <path>', 'path to solution folder')
+  .parse();
+
+const options = program.opts();
+
+if (options.verbose) {
   logger.setDebug(true);
 }
 
 logger.log('PCF Helper version', version);
 
-const path = getArgValue(args, ['-p', '--path']);
-if (typeof path === 'undefined') {
-  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
-  process.exit(1);
-}
-
-task.runUpgrade(path, verboseArgument !== undefined);
+task.runUpgrade(options.path, options.verbose || false);

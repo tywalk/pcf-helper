@@ -2,46 +2,37 @@ import logger from '@tywalk/color-logger';
 import path from 'path';
 import fs from 'fs';
 import { chromium } from 'playwright';
-import { Command } from 'commander';
 
-function loadConfig() {
-  const program = new Command();
-
-  program
-    .option('-u, --url <url>', 'remote environment URL')
-    .option('-s, --script <script>', 'remote script to intercept')
-    .option('-t, --stylesheet <stylesheet>', 'remote stylesheet to intercept')
-    .option('-b, --bundle <path>', 'local bundle path')
-    .option('-c, --css <path>', 'local CSS path')
-    .option('-f, --config <path>', 'config file path', 'dev-config.json')
-    .parse();
-
-  const options = program.opts();
-
+/**
+ * Loads configuration for the session task, supporting a combination of config file, environment variables, and CLI arguments.
+ * The priority order is: CLI arguments > environment variables > config file > defaults.
+ * It also handles constructing full URLs for the script and stylesheet to intercept, allowing for relative paths in the config that are combined with the base URL.
+ * @param config Optional path to a JSON config file. If not provided, it will look for 'session.config.json' in the current working directory.
+ * @returns An object containing the resolved configuration values for the session task.
+ */
+function loadConfig(config?: string) {
   // Load file config if exists
   let fileConfig = {} as any;
-  const configPath = path.join(__dirname, options.config);
-  console.log(`📁 Looking for config file at: ${configPath}`);
+  const configPath = path.join(process.cwd(), config || 'session.config.json');
+  logger.log(`📁 Looking for config file at: ${configPath}`);
   if (fs.existsSync(configPath)) {
     fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    console.log(`✅ Loaded config file: ${JSON.stringify(fileConfig, null, 2)}`);
+    logger.log(`✅ Loaded config file: ${JSON.stringify(fileConfig, null, 2)}`);
+  } else if (process.env.REMOTE_ENVIRONMENT_URL) {
+    logger.warn(`⚠️ Config file not found, using defaults or CLI/env options.`);
   } else {
-    console.log(`⚠️ Config file not found, using defaults or CLI/env options.`);
+    return {}; // No config file and no env vars, return empty config to use defaults
   }
 
   // Get the base URL first
   const remoteEnvironmentUrl =
-    options.url ||
     process.env.REMOTE_ENVIRONMENT_URL ||
-    fileConfig.remoteEnvironmentUrl ||
-    'https://app.your-remote-environment.com';
+    fileConfig.remoteEnvironmentUrl;
 
   // Handle script argument - support both relative paths and full URLs
   let remoteScriptToIntercept =
-    options.script ||
     process.env.REMOTE_SCRIPT_TO_INTERCEPT ||
-    fileConfig.remoteScriptToIntercept ||
-    'https://app.your-remote-environment.com/static/js/remote-control-bundle.js';
+    fileConfig.remoteScriptToIntercept;
 
   // If script is a relative path (doesn't start with http/https), combine with base URL
   if (remoteScriptToIntercept && !remoteScriptToIntercept.startsWith('http')) {
@@ -55,10 +46,8 @@ function loadConfig() {
   }
 
   let remoteStylesheetToIntercept =
-    options.stylesheet ||
     process.env.REMOTE_STYLESHEET_TO_INTERCEPT ||
-    fileConfig.remoteStylesheetToIntercept ||
-    'https://app.your-remote-environment.com/static/css/remote-control-styles.css';
+    fileConfig.remoteStylesheetToIntercept;
 
   // If stylesheet is a relative path (doesn't start with http/https), combine with base URL
   if (remoteStylesheetToIntercept && !remoteStylesheetToIntercept.startsWith('http')) {
@@ -78,19 +67,45 @@ function loadConfig() {
     remoteScriptToIntercept: remoteScriptToIntercept,
     remoteStylesheetToIntercept: remoteStylesheetToIntercept,
     localCssPath:
-      options.css ||
-      process.env.LOCAL_CSS_PATH ||
-      fileConfig.localCssPath ||
-      path.join(__dirname, 'dist', 'local-control-styles.css'),
+      process.env.LOCAL_CSS_PATH ??
+      fileConfig.localCssPath,
     localBundlePath:
-      options.bundle ||
-      process.env.LOCAL_BUNDLE_PATH ||
-      fileConfig.localBundlePath ||
-      path.join(__dirname, 'dist', 'local-control-bundle.js')
+      process.env.LOCAL_BUNDLE_PATH ??
+      fileConfig.localBundlePath,
   };
 }
 
+/**
+ * Runs an ephemeral browser session that intercepts requests to the specified remote script and stylesheet URLs, serving local files instead.
+ * It also manages session state by saving cookies and local storage to a file, allowing for persistent login sessions across runs.
+ * The session will automatically clean up and save state on exit, including handling various exit signals and browser events.
+ * @param remoteEnvironmentUrl The URL of the remote environment to navigate to.
+ * @param remoteScriptToIntercept The full URL of the remote script to intercept (e.g., https://app.your-remote-environment.com/static/js/remote-control-bundle.js).
+ * @param remoteStylesheetToIntercept The full URL of the remote stylesheet to intercept (e.g., https://app.your-remote-environment.com/static/css/remote-control-styles.css).
+ * @param localBundlePath The local file path to the JavaScript bundle that should be served when the remote script URL is requested.
+ * @param localCssPath The local file path to the CSS file that should be served when the remote stylesheet URL is requested.
+ */
 function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: string, remoteStylesheetToIntercept: string, localBundlePath: string, localCssPath: string) {
+  if (!remoteEnvironmentUrl) {
+    logger.error('❌ Remote environment URL is required. Please provide it via CLI, config file, or environment variable.');
+    process.exit(1);
+  }
+  if (!remoteScriptToIntercept) {
+    logger.error('❌ Remote script URL to intercept is required. Please provide it via CLI, config file, or environment variable.');
+    process.exit(1);
+  }
+  if (!remoteStylesheetToIntercept) {
+    logger.error('❌ Remote stylesheet URL to intercept is required. Please provide it via CLI, config file, or environment variable.');
+    process.exit(1);
+  }
+  if (!localBundlePath) {
+    logger.error('❌ Local bundle path is required. Please provide it via CLI, config file, or environment variable.');
+    process.exit(1);
+  }
+  if (!localCssPath) {
+    logger.error('❌ Local CSS path is required. Please provide it via CLI, config file, or environment variable.');
+    process.exit(1);
+  }
   const REMOTE_ENVIRONMENT_URL = remoteEnvironmentUrl;
   const REMOTE_SCRIPT_TO_INTERCEPT = remoteScriptToIntercept;
   const REMOTE_STYLESHEET_TO_INTERCEPT = remoteStylesheetToIntercept;
@@ -107,7 +122,7 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
   logger.debug('');
 
   // Path to store your session cookies
-  const AUTH_DIR = path.join(__dirname, '.auth');
+  const AUTH_DIR = path.join(process.cwd(), '.auth');
   const STATE_FILE = path.join(AUTH_DIR, 'state.json');
 
   (async () => {
@@ -123,10 +138,11 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
     }
 
     // 2. Launch browser and apply context
-    const browser = await chromium.launch({ headless: false });
+    const browser = await chromium.launch({ headless: false, args: ['--auto-open-devtools-for-tabs'] });
     const context = await browser.newContext({
       ...contextOptions,
-      viewport: null // Use the actual browser window size
+      viewport: null, // Use the actual browser window size
+      serviceWorkers: 'block', // Block service workers to prevent caching issues during development
     });
 
     // Shared cleanup function to save state and close browser
@@ -150,7 +166,7 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
           await browser.close();
         }
       } catch (error) {
-        logger.error('Error during cleanup:', error);
+        logger.debug('Error during cleanup:', error);
       }
     };
 
@@ -209,7 +225,7 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
         return false;
       }
       // Match script URLs that end with the same path structure
-      return route.href.includes(scriptPattern) && route.href.includes('bundle.js');
+      return route.href.includes(scriptPattern);
     }, async (route) => {
       logger.log(`✅ Intercepted script request: ${route.request().url()}`);
       logger.log(`   Serving local file: ${LOCAL_BUNDLE_PATH}`);
@@ -226,7 +242,7 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
         return false;
       }
       // Match CSS URLs that end with the same path structure  
-      return route.href.includes(stylesheetPattern) && route.href.includes('ItemDescriptionPCF.css');
+      return route.href.includes(stylesheetPattern);
     }, async (route) => {
       logger.log(`✅ Intercepted CSS request: ${route.request().url()}`);
       logger.log(`   Serving local file: ${LOCAL_CSS_PATH}`);

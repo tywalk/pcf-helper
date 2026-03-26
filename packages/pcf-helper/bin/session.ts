@@ -7,25 +7,27 @@ import { Command } from 'commander';
 const program = new Command();
 
 program
-  .option('-v, --version', 'output the version number')
-  .option('-vv, --verbose', 'enable verbose logging')
+  .name('pcf-helper-session')
+  .description('Run development session')
+  .version(version, '-v, --version')
+  .option('-V, --verbose', 'enable verbose logging')
+  .option('-u, --url <url>', 'remote environment URL')
+  .option('-s, --script <script>', 'remote script to intercept')
+  .option('-t, --stylesheet <stylesheet>', 'remote stylesheet to intercept')
+  .option('-b, --bundle <path>', 'local bundle path')
+  .option('-c, --css <path>', 'local CSS path')
+  .option('-f, --config <path>', 'config file path', 'session.config.json')
   .parse();
 
 const options = program.opts();
-
-if (options.version) {
-  console.log('v%s', version);
-  process.exit(0);
-}
-
 if (options.verbose) {
-  logger.setLevel('debug');
+  logger.setDebug(true);
   logger.debug('Verbose logging enabled');
 }
 
 logger.log('PCF Helper version', version);
 
-const config = task.loadConfig();
+const config = task.loadConfig(options.config);
 
 task.runSession(
   config.remoteEnvironmentUrl,

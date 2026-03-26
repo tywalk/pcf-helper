@@ -2,31 +2,35 @@
 import * as task from '../tasks/init-pcf';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
-import { getArgValue } from '../util/argumentUtil';
-const [, , ...args] = process.argv;
+import { Command } from 'commander';
 
-const commandArgument = args.at(0)?.toLowerCase() ?? '';
-if (['-v', '--version'].includes(commandArgument)) {
-  console.log('v%s', version);
-  process.exit(0);
-}
+const program = new Command();
 
-const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
-if (typeof verboseArgument !== 'undefined') {
+program
+  .name('pcf-helper-init')
+  .description('Initialize a new PCF project')
+  .version(version, '-v, --version')
+  .option('-V, --verbose', 'enable verbose logging')
+  .requiredOption('-n, --name <name>', 'name of the PCF control')
+  .option('--publisher-name <publisherName>', 'publisher name')
+  .option('--publisher-prefix <publisherPrefix>', 'publisher prefix')
+  .option('-p, --path <path>', 'path to create the PCF project')
+  .option('--run-npm-install', 'run npm install after initialization', true)
+  .parse();
+
+const options = program.opts();
+
+if (options.verbose) {
   logger.setDebug(true);
 }
 
 logger.log('PCF Helper version', version);
 
-const name = getArgValue(args, ['-n', '--name']);
-if (typeof name === 'undefined') {
-  logger.error('Name argument is required. Use --name to specify the name of the PCF control.');
-  process.exit(1);
-}
-
-const publisherName = getArgValue(args, ['-pn', '--publisher-name']) ?? '';
-const publisherPrefix = getArgValue(args, ['-pp', '--publisher-prefix']) ?? '';
-const path = getArgValue(args, ['-p', '--path']) ?? '';
-const npm = getArgValue(args, ['-npm', '--run-npm-install'], 'true');
-
-task.runInit(path, name, publisherName, publisherPrefix, npm === 'true', verboseArgument !== undefined);
+task.runInit(
+  options.path || '',
+  options.name,
+  options.publisherName || '',
+  options.publisherPrefix || '',
+  options.runNpmInstall !== false,
+  options.verbose || false
+);

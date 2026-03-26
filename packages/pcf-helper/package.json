@@ -1,6 +1,6 @@
 {
   "name": "@tywalk/pcf-helper",
-  "version": "1.4.26",
+  "version": "1.5.7",
   "description": "Command line helper for building and publishing PCF controls to Dataverse.",
   "main": "dist/index.js",
   "types": "./types/",
@@ -15,7 +15,9 @@
     "test": "jest",
     "build": "tsc",
     "upgrade": "npm version patch --no-git-tag-version",
-    "ready": "npm run upgrade"
+    "ready": "npm run upgrade && npm run build",
+    "update": "npm run ready && npm publish --access public",
+    "temp": "echo $version"
   },
   "keywords": [
     "pcf"

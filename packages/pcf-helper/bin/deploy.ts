@@ -5,55 +5,52 @@ import * as importTask from '../tasks/import-pcf';
 import { formatMsToSec } from '../util/performanceUtil';
 import { version } from '../package.json';
 import logger from '@tywalk/color-logger';
-import { getArgValue } from '../util/argumentUtil';
-const [, , ...args] = process.argv;
+import { Command } from 'commander';
+import { 
+  applyArgumentPreprocessing, 
+  resolveEnvironment, 
+  addPathAndEnvironmentOptions,
+  setupLogging 
+} from '../util/argumentUtil';
 
-const commandArgument = args.at(0)?.toLowerCase() ?? '';
-if (['-v', '--version'].includes(commandArgument)) {
-  console.log('v%s', version);
-  process.exit(0);
-}
+// Apply argument preprocessing for backward compatibility
+const { hadDeprecatedEnv } = applyArgumentPreprocessing(process.argv);
 
-const timeout = getArgValue(args, ['-t', '--timeout']);
-if (typeof timeout !== 'undefined') {
-  const timeoutNumber = Number(timeout);
-  if (isNaN(timeoutNumber) || timeoutNumber <= 0) {
-    logger.error('Timeout argument must be a positive number representing milliseconds.');
-    process.exit(1);
-  }
-}
+const program = new Command();
 
-const verboseArgument = args.find(a => ['-v', '--verbose'].includes(a));
-if (typeof verboseArgument !== 'undefined') {
-  logger.setDebug(true);
-}
+addPathAndEnvironmentOptions(program)
+  .name('pcf-helper-deploy')
+  .description('Deploy PCF controls (runs upgrade, build, and import)')
+  .version(version, '-v, --version')
+  .parse();
 
+const options = program.opts();
+
+setupLogging(options.verbose);
 logger.log('PCF Helper version', version);
 
-const pathArgument = args.find(a => ['-p', '--path'].includes(a));
-if (typeof pathArgument === 'undefined') {
-  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
-  process.exit(1);
-}
-
-const pathIndex = args.indexOf(pathArgument) + 1;
-const path = args.at(pathIndex) as string;
-if (typeof path === 'undefined') {
-  logger.error('Path argument is required. Use --path to specify the path to solution folder.');
-  process.exit(1);
-}
-
+const env = resolveEnvironment(options, hadDeprecatedEnv);
 const tick = performance.now();
 
-const env = getArgValue(args, ['-env', '--environment']) ?? '';
-
 function executeTasks() {
-  const upgradeResult = upgradeTask.runUpgrade(path, typeof verboseArgument !== 'undefined');
+  const upgradeResult = upgradeTask.runUpgrade(options.path, options.verbose || false);
   if (upgradeResult === 1) return 1;
-  const buildResult = buildTask.runBuild(path, typeof verboseArgument !== 'undefined', typeof timeout !== 'undefined' ? Number(timeout) : undefined);
+  
+  const buildResult = buildTask.runBuild(
+    options.path, 
+    options.verbose || false, 
+    options.timeout ? Number(options.timeout) : undefined
+  );
   if (buildResult === 1) return 1;
-  const importResult = importTask.runImport(path, env, typeof verboseArgument !== 'undefined', typeof timeout !== 'undefined' ? Number(timeout) : undefined);
+  
+  const importResult = importTask.runImport(
+    options.path, 
+    env, 
+    options.verbose || false, 
+    options.timeout ? Number(options.timeout) : undefined
+  );
   if (importResult === 1) return 1;
+  
   return 0;
 }
 
@@ -64,7 +61,7 @@ try {
     logger.log('Deploy complete!');
   }
 } catch (e: any) {
-  logger.error('One or more tasks failed while deploying: ', (e && e.message) || 'unkown error');
+  logger.error('One or more tasks failed while deploying: ', (e && e.message) || 'unknown error');
   result = 1;
 } finally {
   const tock = performance.now();
