@@ -9,13 +9,14 @@ This package provides a single, consolidated command-line interface that brings 
 
 ## 📋 Table of Contents
 
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Command Structure](#command-structure)
-- [Available Subcommands](#available-subcommands)
-- [Usage Examples](#usage-examples)
-- [Global Options](#global-options)
-- [Troubleshooting](#troubleshooting)
+- [Installation](#-installation)
+- [Quick Start](#-quick-start)
+- [Command Structure](#️-command-structure)
+- [Available Subcommands](#️-available-subcommands)
+- [Usage Examples](#-detailed-command-reference)
+- [Workflow Examples](#-workflow-examples)
+- [Global Options](#️-global-options)
+- [Troubleshooting](#-troubleshooting)
 
 ## 📦 Installation
 
@@ -94,9 +95,11 @@ pcf-helper-run init -n <control-name> [options]
 ```
 
 #### Required Parameters
+
 - `-n, --name <name>` - Name of the PCF control
 
 #### Optional Parameters
+
 - `--publisher-name <name>` - Publisher name
 - `--publisher-prefix <prefix>` - Publisher prefix
 - `-p, --path <path>` - Creation path (default: current directory)
@@ -128,9 +131,11 @@ pcf-helper-run build -p <solution-path> [options]
 ```
 
 #### Required Parameters
+
 - `-p, --path <path>` - Path to the solution folder
 
 #### Optional Parameters
+
 - `-e, --environment <environment>` - Target environment configuration
 - `--env <environment>` - (Deprecated: use `--environment`) Target environment
 - `-t, --timeout <milliseconds>` - Build timeout (default: 300000)
@@ -157,9 +162,11 @@ pcf-helper-run import -p <solution-path> [options]
 ```
 
 #### Required Parameters
+
 - `-p, --path <path>` - Path to the solution folder
 
 #### Optional Parameters
+
 - `-e, --environment <environment>` - Target environment
 - `--env <environment>` - (Deprecated: use `--environment`) Target environment
 - `-t, --timeout <milliseconds>` - Import timeout
@@ -186,9 +193,11 @@ pcf-helper-run deploy -p <solution-path> [options]
 ```
 
 #### Required Parameters
+
 - `-p, --path <path>` - Path to the solution folder
 
 #### Optional Parameters
+
 - `-e, --environment <environment>` - Target environment for deployment
 - `--env <environment>` - (Deprecated: use `--environment`) Target environment
 - `-t, --timeout <milliseconds>` - Deployment timeout
@@ -212,6 +221,7 @@ pcf-helper-run upgrade -p <solution-path> [options]
 ```
 
 #### Required Parameters
+
 - `-p, --path <path>` - Path to the solution folder
 
 #### Examples
@@ -233,6 +243,7 @@ pcf-helper-run session [options]
 ```
 
 #### Optional Parameters
+
 - `-u, --url <url>` - Remote environment URL
 - `-s, --script <path>` - Remote script to intercept
 - `-t, --stylesheet <path>` - Remote stylesheet to intercept
@@ -355,7 +366,7 @@ dotnet --version
 
 ```bash
 # Increase timeout for large projects
-pcf-helper-run build -p . --timeout 600000  # 10 minutes
+pcf-helper-run build -p . --timeout 120000  # 2 minutes
 ```
 
 #### Deprecated Flag Warnings
