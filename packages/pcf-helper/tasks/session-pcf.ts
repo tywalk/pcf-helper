@@ -2,6 +2,18 @@ import logger from '@tywalk/color-logger';
 import path from 'path';
 import fs from 'fs';
 import { chromium } from 'playwright';
+import { spawn, ChildProcess } from 'child_process';
+
+export type SessionOptions = {
+  verbose?: boolean;
+  url?: string;
+  script?: string;
+  stylesheet?: string;
+  bundle?: string;
+  css?: string;
+  config?: string;
+  watch?: boolean;
+};
 
 /**
  * Loads configuration for the session task, supporting a combination of config file, environment variables, and CLI arguments.
@@ -72,6 +84,9 @@ function loadConfig(config?: string) {
     localBundlePath:
       process.env.LOCAL_BUNDLE_PATH ??
       fileConfig.localBundlePath,
+    startWatch:
+      process.env.START_WATCH === 'true' ||
+      fileConfig.startWatch || false,
   };
 }
 
@@ -84,8 +99,10 @@ function loadConfig(config?: string) {
  * @param remoteStylesheetToIntercept The full URL of the remote stylesheet to intercept (e.g., https://app.your-remote-environment.com/static/css/remote-control-styles.css).
  * @param localBundlePath The local file path to the JavaScript bundle that should be served when the remote script URL is requested.
  * @param localCssPath The local file path to the CSS file that should be served when the remote stylesheet URL is requested.
+ * @param startWatch Optional flag to start the session in watch mode. If true, the process will kick off "pcf-scripts start watch" in parallel to automatically rebuild the bundle on changes.
+ * @returns A promise that resolves when the session is set up and running. The session will continue to run until the process is exited, at which point it will clean up and save state.
  */
-function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: string, remoteStylesheetToIntercept: string, localBundlePath: string, localCssPath: string) {
+async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: string, remoteStylesheetToIntercept: string, localBundlePath: string, localCssPath: string, startWatch?: boolean) {
   if (!remoteEnvironmentUrl) {
     logger.error('❌ Remote environment URL is required. Please provide it via CLI, config file, or environment variable.');
     process.exit(1);
@@ -125,7 +142,38 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
   const AUTH_DIR = path.join(process.cwd(), '.auth');
   const STATE_FILE = path.join(AUTH_DIR, 'state.json');
 
-  (async () => {
+  // Start watch process if requested
+  let watchProcess: ChildProcess | undefined;
+  if (startWatch) {
+    logger.log('🔧 Starting pcf-scripts watch process...');
+    watchProcess = spawn('pcf-scripts', ['start', 'watch'], {
+      cwd: process.cwd(),
+      stdio: ['inherit', 'pipe', 'pipe'],
+      shell: true
+    });
+
+    watchProcess.stdout?.on('data', (data) => {
+      logger.log(`📦 [PCF Watch] ${data.toString().trim()}`);
+    });
+
+    watchProcess.stderr?.on('data', (data) => {
+      logger.warn(`⚠️ [PCF Watch] ${data.toString().trim()}`);
+    });
+
+    watchProcess.on('exit', (code) => {
+      if (code !== null && code !== 0) {
+        logger.error(`❌ PCF watch process exited with code ${code}`);
+      } else {
+        logger.log('✅ PCF watch process ended');
+      }
+    });
+
+    watchProcess.on('error', (error) => {
+      logger.error('❌ Failed to start PCF watch process:', error);
+    });
+  }
+
+  await (async () => {
     logger.log('🚀 Starting ephemeral browser session...');
 
     // 1. Prepare context options (load session if it exists)
@@ -149,6 +197,20 @@ function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: strin
     const cleanup = async (reason = 'unknown') => {
       try {
         logger.log(`💾 Saving session state (${reason})...`);
+
+        // Kill the watch process if it's running
+        if (watchProcess && !watchProcess.killed) {
+          logger.log('🛑 Terminating PCF watch process...');
+          watchProcess.kill('SIGTERM');
+          
+          // Give it a chance to exit gracefully, then force kill if needed
+          setTimeout(() => {
+            if (watchProcess && !watchProcess.killed) {
+              logger.warn('⚠️ Force killing PCF watch process...');
+              watchProcess.kill('SIGKILL');
+            }
+          }, 2000);
+        }
 
         // Ensure the .auth directory exists before saving
         if (!fs.existsSync(AUTH_DIR)) {

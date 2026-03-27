@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import * as task from '../tasks/session-pcf';
 import { version } from '../package.json';
-import logger from '@tywalk/color-logger';
 import { Command } from 'commander';
+import { handleResults, setupExecutionContext } from '../util/commandUtil';
 
 const program = new Command();
 
@@ -17,22 +17,26 @@ program
   .option('-b, --bundle <path>', 'local bundle path')
   .option('-c, --css <path>', 'local CSS path')
   .option('-f, --config <path>', 'config file path', 'session.config.json')
-  .parse();
+  .option('-w, --watch', 'start pcf-scripts watch process')
+  .parse()
+  .action((options: task.SessionOptions) => {
+    const { logger, tick } = setupExecutionContext(options);
 
-const options = program.opts();
-if (options.verbose) {
-  logger.setDebug(true);
-  logger.debug('Verbose logging enabled');
-}
+    logger.log('PCF Helper version', version);
 
-logger.log('PCF Helper version', version);
+    const config = task.loadConfig(options.config);
 
-const config = task.loadConfig(options.config);
+    // Priority: CLI args > config file > environment variables
+    const startWatch = options.watch ?? config.startWatch ?? false;
 
-task.runSession(
-  config.remoteEnvironmentUrl,
-  config.remoteScriptToIntercept,
-  config.remoteStylesheetToIntercept,
-  config.localBundlePath,
-  config.localCssPath
-);
+    task.runSession(
+      options.url ?? config.remoteEnvironmentUrl,
+      options.script ?? config.remoteScriptToIntercept,
+      options.stylesheet ?? config.remoteStylesheetToIntercept,
+      options.bundle ?? config.localBundlePath,
+      options.css ?? config.localCssPath,
+      startWatch
+    );
+
+    handleResults('session', logger, tick, 0);
+  });
