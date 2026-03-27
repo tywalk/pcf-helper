@@ -116,7 +116,7 @@ const setupExecutionContext = (options: CommonOptions) => {
 };
 
 // Helper function to execute tasks and handle results
-const executeTask = (taskName: string, logger: Logger, tick: number, result: number) => {
+const handleResults = (taskName: string, logger: Logger, tick: number, result: number) => {
   if (taskName !== 'session') {
     if (result === 0) {
       logger.log(`[PCF Helper Run] ${taskName} completed successfully!`);
@@ -153,7 +153,7 @@ addPathOptions(program.command('upgrade'))
       result = 1;
     }
 
-    executeTask('upgrade', logger, tick, result);
+    handleResults('upgrade', logger, tick, result);
   });
 
 // Define the build command  
@@ -180,7 +180,7 @@ addPathOptions(program.command('build'))
       result = 1;
     }
 
-    executeTask('build', logger, tick, result);
+    handleResults('build', logger, tick, result);
   });
 
 // Define the import command
@@ -213,7 +213,7 @@ addPathOptions(program.command('import'))
       result = 1;
     }
 
-    executeTask('import', logger, tick, result);
+    handleResults('import', logger, tick, result);
   });
 
 // Define the deploy command (runs upgrade, build, and import)
@@ -267,7 +267,7 @@ addPathOptions(program.command('deploy'))
       result = 1;
     }
 
-    executeTask('deploy', logger, tick, result);
+    handleResults('deploy', logger, tick, result);
   });
 
 // Define the init command
@@ -297,7 +297,7 @@ addCommonOptions(program.command('init'))
       result = 1;
     }
 
-    executeTask('init', logger, tick, result);
+    handleResults('init', logger, tick, result);
   });
 
 // Define the session command
@@ -310,15 +310,14 @@ addCommonOptions(program.command('session'))
   .option('-c, --local-css <path>', 'local CSS path')
   .option('-f, --config <path>', 'config file path', 'session.config.json')
   .option('-w, --watch', 'start pcf-scripts watch process')
-  .action((options: SessionOptions) => {
+  .action(async (options: SessionOptions) => {
     const { logger, tick } = setupExecutionContext(options);
 
-    let result = 0;
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' session started.\n');
       if (!options.url || options.config) {
         const config = tasks.loadConfig(options.config || 'session.config.json');
-        tasks.runSession(
+        await tasks.runSession(
           config.remoteEnvironmentUrl ?? options.url,
           config.remoteScriptToIntercept ?? options.script,
           config.remoteStylesheetToIntercept ?? options.stylesheet,
@@ -327,7 +326,7 @@ addCommonOptions(program.command('session'))
           config.startWatch || options.watch
         );
       } else {
-        tasks.runSession(
+        await tasks.runSession(
           options.url,
           options.script,
           options.stylesheet,
@@ -336,12 +335,12 @@ addCommonOptions(program.command('session'))
           options.watch
         );
       }
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed during session: ', (e && e.message) || 'unknown error');
-      result = 1;
-    }
 
-    executeTask('session', logger, tick, result);
+      const tock = performance.now();
+      logger.log(formatMsToSec('Session started successfully in %is.', tock - tick));
+    } catch (e: any) {
+      logger.error('[PCF Helper Run] One or more tasks failed during session or session startup: ', (e && e.message) || 'unknown error');
+    }
   });
 
 // Parse the command line arguments
