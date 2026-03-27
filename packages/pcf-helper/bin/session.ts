@@ -3,6 +3,7 @@ import * as task from '../tasks/session-pcf';
 import { version } from '../package.json';
 import { Command } from 'commander';
 import { handleResults, setupExecutionContext } from '../util/commandUtil';
+import { formatMsToSec } from '../util/performanceUtil';
 
 const program = new Command();
 
@@ -18,8 +19,7 @@ program
   .option('-c, --css <path>', 'local CSS path')
   .option('-f, --config <path>', 'config file path', 'session.config.json')
   .option('-w, --watch', 'start pcf-scripts watch process')
-  .parse()
-  .action((options: task.SessionOptions) => {
+  .action(async (options: task.SessionOptions) => {
     const { logger, tick } = setupExecutionContext(options);
 
     logger.log('PCF Helper version', version);
@@ -29,7 +29,7 @@ program
     // Priority: CLI args > config file > environment variables
     const startWatch = options.watch ?? config.startWatch ?? false;
 
-    task.runSession(
+    await task.runSession(
       options.url ?? config.remoteEnvironmentUrl,
       options.script ?? config.remoteScriptToIntercept,
       options.stylesheet ?? config.remoteStylesheetToIntercept,
@@ -38,5 +38,7 @@ program
       startWatch
     );
 
-    handleResults('session', logger, tick, 0);
-  });
+    const tock = performance.now();
+    logger.log(formatMsToSec('Session started successfully in %is.', tock - tick));
+  })
+  .parse();

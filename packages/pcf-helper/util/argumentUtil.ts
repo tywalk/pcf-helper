@@ -100,13 +100,3 @@ export function addPathAndEnvironmentOptions(command: Command): Command {
     .option('-e, --environment <environment>', 'environment name')
     .option('--env <environment>', '[DEPRECATED: use -e/--environment] environment name (deprecated)');
 }
-
-/**
- * Sets up logging based on verbose option
- * @param verbose - Whether verbose logging is enabled
- */
-export function setupLogging(verbose?: boolean): void {
-  if (verbose) {
-    logger.setDebug(true);
-  }
-}

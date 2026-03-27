@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import * as task from '../tasks/build-pcf';
 import { version } from '../package.json';
-import logger from '@tywalk/color-logger';
 import { Command } from 'commander';
+import { handleResults, setupExecutionContext } from '../util/commandUtil';
 
 const program = new Command();
 
@@ -19,18 +19,17 @@ program
     return value;
   })
   .requiredOption('-p, --path <path>', 'path to solution folder')
+  .action((options) => {
+    const { logger, tick } = setupExecutionContext(options);
+
+    logger.log('PCF Helper version', version);
+
+    const result = task.runBuild(
+      options.path,
+      options.verbose || false,
+      options.timeout ? Number(options.timeout) : undefined
+    );
+
+    handleResults('build', logger, tick, result);
+  })
   .parse();
-
-const options = program.opts();
-
-if (options.verbose) {
-  logger.setDebug(true);
-}
-
-logger.log('PCF Helper version', version);
-
-task.runBuild(
-  options.path,
-  options.verbose || false,
-  options.timeout ? Number(options.timeout) : undefined
-);
