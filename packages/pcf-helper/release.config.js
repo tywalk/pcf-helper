@@ -1,11 +1,12 @@
 export default {
   branches: ['master'],
+  tagFormat: 'pcf-helper@v${version}',
   plugins: [
     ['@semantic-release/commit-analyzer', {
       releaseRules: [
-        { scope: 'pcf-helper', type: 'feat',  release: 'minor' },
-        { scope: 'pcf-helper', type: 'fix',   release: 'patch' },
-        { scope: 'pcf-helper', type: 'perf',  release: 'patch' },
+        { scope: 'pcf-helper', type: 'feat', release: 'minor' },
+        { scope: 'pcf-helper', type: 'fix', release: 'patch' },
+        { scope: 'pcf-helper', type: 'perf', release: 'patch' },
         // commits without this scope won't trigger a release
         { scope: '!pcf-helper', release: false },
       ],
