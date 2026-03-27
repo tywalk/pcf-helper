@@ -316,15 +316,15 @@ addCommonOptions(program.command('session'))
     let result = 0;
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' session started.\n');
-      if (!options.url) {
+      if (!options.url || options.config) {
         const config = tasks.loadConfig(options.config || 'session.config.json');
         tasks.runSession(
-          config.remoteEnvironmentUrl,
-          config.remoteScriptToIntercept,
-          config.remoteStylesheetToIntercept,
-          config.localBundlePath,
-          config.localCssPath,
-          config.startWatch
+          config.remoteEnvironmentUrl ?? options.url,
+          config.remoteScriptToIntercept ?? options.script,
+          config.remoteStylesheetToIntercept ?? options.stylesheet,
+          config.localBundlePath ?? options.bundle,
+          config.localCssPath ?? options.css,
+          config.startWatch ?? options.watch
         );
       } else {
         tasks.runSession(
