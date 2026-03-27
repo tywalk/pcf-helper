@@ -51,6 +51,7 @@ interface SessionOptions extends CommonOptions {
   bundle: string;
   css: string;
   config?: string;
+  watch?: boolean;
 }
 
 // Configure the CLI program
@@ -308,6 +309,7 @@ addCommonOptions(program.command('session'))
   .option('-b, --local-bundle <path>', 'local bundle path')
   .option('-c, --local-css <path>', 'local CSS path')
   .option('-f, --config <path>', 'config file path', 'session.config.json')
+  .option('-w, --watch', 'start pcf-scripts watch process')
   .action((options: SessionOptions) => {
     const { logger, tick } = setupExecutionContext(options);
 
@@ -316,19 +318,24 @@ addCommonOptions(program.command('session'))
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' session started.\n');
       if (!options.url) {
         const config = tasks.loadConfig(options.config || 'session.config.json');
-        options.url = config.remoteEnvironmentUrl;
-        options.script = config.remoteScriptToIntercept;
-        options.stylesheet = config.remoteStylesheetToIntercept;
-        options.bundle = config.localBundlePath;
-        options.css = config.localCssPath;
+        tasks.runSession(
+          config.remoteEnvironmentUrl,
+          config.remoteScriptToIntercept,
+          config.remoteStylesheetToIntercept,
+          config.localBundlePath,
+          config.localCssPath,
+          config.startWatch
+        );
+      } else {
+        tasks.runSession(
+          options.url,
+          options.script,
+          options.stylesheet,
+          options.bundle,
+          options.css,
+          options.watch
+        );
       }
-      tasks.runSession(
-        options.url,
-        options.script,
-        options.stylesheet,
-        options.bundle,
-        options.css
-      );
     } catch (e: any) {
       logger.error('[PCF Helper Run] One or more tasks failed during session: ', (e && e.message) || 'unknown error');
       result = 1;
