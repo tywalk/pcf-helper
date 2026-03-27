@@ -324,7 +324,7 @@ addCommonOptions(program.command('session'))
           config.remoteStylesheetToIntercept ?? options.stylesheet,
           config.localBundlePath ?? options.bundle,
           config.localCssPath ?? options.css,
-          config.startWatch ?? options.watch
+          config.startWatch || options.watch
         );
       } else {
         tasks.runSession(
