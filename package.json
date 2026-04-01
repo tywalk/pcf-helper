@@ -9,7 +9,23 @@
     "test": "node test.js"
   },
   "keywords": [
-    "pcf"
+    "pcf",
+    "pcf-control",
+    "pcf-component",
+    "power-platform",
+    "powerapps",
+    "power-apps",
+    "dataverse",
+    "dynamics-365",
+    "microsoft",
+    "cli",
+    "command-line",
+    "developer-tools",
+    "build-tool",
+    "deployment",
+    "automation",
+    "typescript",
+    "pac"
   ],
   "author": "tywalk",
   "devDependencies": {

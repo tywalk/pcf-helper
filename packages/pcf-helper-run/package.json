@@ -1,7 +1,7 @@
 {
   "name": "@tywalk/pcf-helper-run",
   "version": "1.2.15",
-  "description": "A simple command-line utility for building and publishing PCF controls to Dataverse.",
+  "description": "Unified CLI interface for Power Platform Component Framework (PCF) development — init, build, import, deploy, and manage PCF controls in Dataverse.",
   "types": "./types/",
   "files": [
     "dist",
@@ -22,7 +22,23 @@
     "update": "npm run ready && npm publish --access public"
   },
   "keywords": [
-    "pcf"
+    "pcf",
+    "pcf-control",
+    "pcf-component",
+    "power-platform",
+    "powerapps",
+    "power-apps",
+    "dataverse",
+    "dynamics-365",
+    "microsoft",
+    "cli",
+    "command-line",
+    "developer-tools",
+    "build-tool",
+    "deployment",
+    "automation",
+    "typescript",
+    "pac"
   ],
   "author": "tywalk",
   "bin": {

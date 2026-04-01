@@ -250,6 +250,7 @@ pcf-helper-run session [options]
 - `-b, --bundle <path>` - Local bundle path
 - `-c, --css <path>` - Local CSS path
 - `-f, --config <path>` - Config file path (default: `session.config.json`)
+- `-w, --watch` - Start pcf-scripts watch process to automatically rebuild on changes
 
 #### Examples
 
@@ -259,6 +260,9 @@ pcf-helper-run session
 
 # Session with custom configuration
 pcf-helper-run session -u "https://contoso.crm.dynamics.com" -s ./bundle.js
+
+# Session with watch mode for automatic rebuilds
+pcf-helper-run session --watch
 ```
 
 ## ⚙️ Global Options
@@ -390,8 +394,8 @@ pcf-helper-run deploy --help
 
 ### Documentation Links
 
-- [Power Platform Component Framework Documentation](https://docs.microsoft.com/en-us/powerapps/developer/component-framework/)
-- [Power Platform CLI Documentation](https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli)
+- [Power Platform Component Framework Documentation](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/overview)
+- [Power Platform CLI Documentation](https://learn.microsoft.com/en-us/power-platform/developer/cli/introduction)
 - [PCF Community Gallery](https://pcf.gallery/)
 
 ## 🔗 Related Packages

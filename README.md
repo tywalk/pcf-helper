@@ -45,7 +45,7 @@ This monorepo contains two complementary packages:
 ## 🔧 Requirements
 
 - **Node.js** (version 16.x or higher)
-- **Microsoft Power Platform CLI (`pac`)** - [Installation Guide](https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli)
+- **Microsoft Power Platform CLI (`pac`)** - [Installation Guide](https://learn.microsoft.com/en-us/power-platform/developer/cli/introduction)
 - **.NET SDK** - [Download .NET](https://dotnet.microsoft.com/download)
 
 ### Verify Installation
@@ -104,8 +104,8 @@ pcf-helper-run build -p .
 
 ### External Resources
 
-- [Power Platform Component Framework Documentation](https://docs.microsoft.com/en-us/powerapps/developer/component-framework/)
-- [Power Platform CLI Documentation](https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli)
+- [Power Platform Component Framework Documentation](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/overview)
+- [Power Platform CLI Documentation](https://learn.microsoft.com/en-us/power-platform/developer/cli/introduction)
 - [PCF Gallery - Community Controls](https://pcf.gallery/)
 
 ## 🧪 Testing

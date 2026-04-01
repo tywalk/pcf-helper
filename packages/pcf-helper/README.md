@@ -169,17 +169,11 @@ pcf-helper-session [options]
 | `-b, --bundle <path>` | Local bundle path | ❌ | - |
 | `-c, --css <path>` | Local CSS path | ❌ | - |
 | `-f, --config <path>` | Config file path | ❌ | `session.config.json` |
+| `-w, --watch` | Start pcf-scripts watch process | ❌ | `false` |
 | `-V, --verbose` | Enable verbose logging | ❌ | `false` |
 | `-v, --version` | Display version | ❌ | - |
 
 ## 🔧 API Reference
-
-You can also use PCF Helper programmatically in your Node.js applications:
-
-```typescript
-import * as pcfHelper from '@tywalk/pcf-helper';
-
-// Build a PCF control
 const result = pcfHelper.runBuild('./my-solution', true, 120000);
 
 // Initialize a new project
@@ -242,8 +236,8 @@ pcf-helper-build --version
 
 ## 📚 Additional Resources
 
-- [Power Platform Component Framework Documentation](https://docs.microsoft.com/en-us/powerapps/developer/component-framework/)
-- [Power Platform CLI Reference](https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli)
+- [Power Platform Component Framework Documentation](https://learn.microsoft.com/en-us/power-apps/developer/component-framework/overview)
+- [Power Platform CLI Reference](https://learn.microsoft.com/en-us/power-platform/developer/cli/introduction)
 
 ## 🔗 Related Packages
 
