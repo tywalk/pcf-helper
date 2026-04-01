@@ -3,7 +3,7 @@ import { Command, program } from 'commander';
 import * as tasks from '@tywalk/pcf-helper';
 import { Logger } from '@tywalk/color-logger';
 import { version } from './package.json';
-import { formatMsToSec, formatTime } from './util/performanceUtil';
+import { formatMsToSec, formatTime } from '@tywalk/pcf-helper';
 
 // Preprocess arguments to handle deprecated flags
 const preprocessArgs = (args: string[]): { args: string[], hadDeprecatedEnv: boolean } => {
@@ -148,8 +148,8 @@ addPathOptions(program.command('upgrade'))
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' upgrade started.\n');
       result = tasks.runUpgrade(options.path, options.verbose || false);
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed while upgrading: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('[PCF Helper Run] One or more tasks failed while upgrading: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
     }
 
@@ -175,8 +175,8 @@ addPathOptions(program.command('build'))
         options.verbose || false,
         options.timeout ? Number(options.timeout) : undefined
       );
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed while building: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('[PCF Helper Run] One or more tasks failed while building: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
     }
 
@@ -208,8 +208,8 @@ addPathOptions(program.command('import'))
         options.verbose || false,
         options.timeout ? Number(options.timeout) : undefined
       );
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed while importing: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('[PCF Helper Run] One or more tasks failed while importing: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
     }
 
@@ -262,8 +262,8 @@ addPathOptions(program.command('deploy'))
           }
         }
       }
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed while deploying: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('[PCF Helper Run] One or more tasks failed while deploying: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
     }
 
@@ -292,8 +292,8 @@ addCommonOptions(program.command('init'))
         options.runNpmInstall !== false,
         options.verbose || false
       );
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed while initializing: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('[PCF Helper Run] One or more tasks failed while initializing: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
     }
 
@@ -338,8 +338,8 @@ addCommonOptions(program.command('session'))
 
       const tock = performance.now();
       logger.log(formatMsToSec('Session started successfully in %is.', tock - tick));
-    } catch (e: any) {
-      logger.error('[PCF Helper Run] One or more tasks failed during session or session startup: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('[PCF Helper Run] One or more tasks failed during session or session startup: ', e instanceof Error ? e.message : 'unknown error');
     }
   });
 
