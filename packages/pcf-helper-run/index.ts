@@ -3,7 +3,7 @@ import { Command, program } from 'commander';
 import * as tasks from '@tywalk/pcf-helper';
 import { Logger } from '@tywalk/color-logger';
 import { version } from './package.json';
-import { formatMsToSec, formatTime } from '@tywalk/pcf-helper';
+import { formatMsToSec, formatTime } from './util/performanceUtil';
 
 // Preprocess arguments to handle deprecated flags
 const preprocessArgs = (args: string[]): { args: string[], hadDeprecatedEnv: boolean } => {
