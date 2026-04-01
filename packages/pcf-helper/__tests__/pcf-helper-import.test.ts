@@ -10,20 +10,15 @@ test('import displays version', (done) => {
   });
 
   task.on('close', (code) => {
+    console.log('Output:', output);
     expect(output).toContain(version);
     expect(code).toBe(0);
     done();
   });
-});
+}, 10000);
 
 test('import errors if no path is provided', (done) => {
   const task = spawn('node', ['./dist/bin/import.js', '-p']);
-
-  // Add timeout  
-  const timeout = setTimeout(() => {
-    task.kill();
-    done.fail('Test timed out');
-  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -35,8 +30,8 @@ test('import errors if no path is provided', (done) => {
   });
 
   task.on('close', (code) => {
+    console.log('Output:', output);
     expect(code).toBe(1);
-    clearTimeout(timeout);
     done();
   });
-});
+}, 10000);

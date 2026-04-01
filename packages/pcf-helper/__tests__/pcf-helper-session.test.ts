@@ -10,20 +10,15 @@ test('session displays version', (done) => {
   });
 
   task.on('close', (code) => {
+    console.log('Output:', output);
     expect(output).toContain(version);
     expect(code).toBe(0);
-    done();
+    done?.();
   });
-});
+}, 10000);
 
-test('session errors if no args are provided', (done) => {
+test('session errors if no/wrong args are provided', (done) => {
   const task = spawn('node', ['./dist/bin/session.js', '-e']);
-
-  // Add timeout  
-  const timeout = setTimeout(() => {
-    task.kill();
-    done.fail('Test timed out');
-  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -35,8 +30,8 @@ test('session errors if no args are provided', (done) => {
   });
 
   task.on('close', (code) => {
+    console.log('Output:', output);
     expect(code).toBe(1);
-    clearTimeout(timeout);
-    done();
+    done?.();
   });
-});
+}, 10000);

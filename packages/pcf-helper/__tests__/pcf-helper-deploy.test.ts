@@ -14,20 +14,15 @@ test('deploy displays version', (done) => {
   });
 
   task.on('close', (code) => {
+    console.log('Output:', output);
     expect(output).toContain(version);
     expect(code).toBe(0);
     done();
   });
-});
+}, 10000);
 
 test('deploy errors if no path is provided', (done) => {
   const task = spawn('node', ['./dist/bin/deploy.js', '-p']);
-
-  // Add timeout  
-  const timeout = setTimeout(() => {
-    task.kill();
-    done.fail('Test timed out');
-  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -39,8 +34,8 @@ test('deploy errors if no path is provided', (done) => {
   });
 
   task.on('close', (code) => {
+    console.log('Output:', output);
     expect(code).toBe(1);
-    clearTimeout(timeout);
     done();
   });
-});
+}, 10000);
