@@ -41,6 +41,8 @@ interface InitOptions extends CommonOptions {
   name: string;
   publisherName: string;
   publisherPrefix: string;
+  template?: string;
+  framework?: string;
   runNpmInstall?: boolean;
 }
 
@@ -60,8 +62,13 @@ program
   .description('A simple command-line utility for building and publishing PCF controls to Dataverse.')
   .version(version);
 
+// Helper function to add verbose option to commands
+const withVerboseOption = (command: Command) => {
+  return command.option('-v, --verbose', 'enable verbose logging');
+};
+
 // Global options for commands that need them
-const addCommonOptions = (command: Command) => {
+const withCommonOptions = (command: Command) => {
   return command
     .option('-v, --verbose', 'enable verbose logging')
     .option('-t, --timeout <milliseconds>', 'timeout in milliseconds', (value: string) => {
@@ -73,8 +80,8 @@ const addCommonOptions = (command: Command) => {
     });
 };
 
-const addPathOptions = (command: Command) => {
-  return addCommonOptions(command)
+const withPathOptions = (command: Command) => {
+  return withCommonOptions(command)
     .option('-p, --path <path>', 'path to solution folder')
     .option('-e, --environment <environment>', 'environment name')
     .option('--env <environment>', '[DEPRECATED: use -e/--environment] environment name (deprecated)');
@@ -134,7 +141,7 @@ const handleResults = (taskName: string, logger: Logger, tick: number, result: n
 };
 
 // Define the upgrade command
-addPathOptions(program.command('upgrade'))
+withPathOptions(program.command('upgrade'))
   .description('upgrade PCF controls')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
@@ -157,7 +164,7 @@ addPathOptions(program.command('upgrade'))
   });
 
 // Define the build command  
-addPathOptions(program.command('build'))
+withPathOptions(program.command('build'))
   .description('build PCF controls')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
@@ -184,7 +191,7 @@ addPathOptions(program.command('build'))
   });
 
 // Define the import command
-addPathOptions(program.command('import'))
+withPathOptions(program.command('import'))
   .description('import PCF controls')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
@@ -217,7 +224,7 @@ addPathOptions(program.command('import'))
   });
 
 // Define the deploy command (runs upgrade, build, and import)
-addPathOptions(program.command('deploy'))
+withPathOptions(program.command('deploy'))
   .description('deploy PCF controls (runs upgrade, build, and import)')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
@@ -271,12 +278,14 @@ addPathOptions(program.command('deploy'))
   });
 
 // Define the init command
-addCommonOptions(program.command('init'))
+withVerboseOption(program.command('init'))
   .description('initialize a new PCF project')
   .requiredOption('-p, --path <path>', 'path to PCF folder')
   .requiredOption('-n, --name <name>', 'name of the control')
   .requiredOption('--publisher-name <publisherName>', 'publisher name')
   .requiredOption('--publisher-prefix <publisherPrefix>', 'publisher prefix')
+  .option('-t, --template <template>', 'template for the component (field|dataset)', 'field')
+  .option('-f, --framework <framework>', 'rendering framework for control (none|react)', 'react')
   .option('--run-npm-install', 'run npm install after initialization', true)
   .action((options: InitOptions) => {
     const { logger, tick } = setupExecutionContext(options);
@@ -289,6 +298,8 @@ addCommonOptions(program.command('init'))
         options.name,
         options.publisherName,
         options.publisherPrefix,
+        options.template || 'field',
+        options.framework || 'react',
         options.runNpmInstall !== false,
         options.verbose || false
       );
@@ -301,7 +312,7 @@ addCommonOptions(program.command('init'))
   });
 
 // Define the session command
-addCommonOptions(program.command('session'))
+withCommonOptions(program.command('session'))
   .description('run development session')
   .option('-u, --url <url>', 'remote environment URL')
   .option('-i, --intercept-script <script>', 'remote script to intercept')

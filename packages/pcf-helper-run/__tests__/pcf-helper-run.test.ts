@@ -4,12 +4,6 @@ import * as tasks from '@tywalk/pcf-helper';
 
 test('displays version', (done) => {
   const task = spawn('node', ['./dist/index.js', '--version']);
-  
-  // Add timeout
-  const timeout = setTimeout(() => {
-    task.kill();
-    done.fail('Test timed out');
-  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -17,8 +11,7 @@ test('displays version', (done) => {
   });
 
   task.on('close', (code) => {
-    clearTimeout(timeout);
-    console.log(output);
+    console.log('Output:', output);
     expect(output).toContain(version);
     expect(code).toBe(0);
     done();
@@ -28,12 +21,6 @@ test('displays version', (done) => {
 
 test('errors if no path is provided', (done) => {
   const task = spawn('node', ['./dist/index.js', 'build']);
-  
-  // Add timeout
-  const timeout = setTimeout(() => {
-    task.kill();
-    done.fail('Test timed out');
-  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -45,8 +32,7 @@ test('errors if no path is provided', (done) => {
   });
 
   task.on('close', (code) => {
-    clearTimeout(timeout);
-    console.log(output);
+    console.log('Output:', output);
     // The command should exit with non-zero code when required path is missing
     expect(code).not.toBe(0);
     done();
@@ -55,12 +41,6 @@ test('errors if no path is provided', (done) => {
 
 test('errors if incorrect command is provided', (done) => {
   const task = spawn('node', ['./dist/index.js', 'invalidcommand']);
-  
-  // Add timeout  
-  const timeout = setTimeout(() => {
-    task.kill();
-    done.fail('Test timed out');
-  }, 5000);
 
   let output = '';
   task.stdout.on('data', (data) => {
@@ -72,8 +52,7 @@ test('errors if incorrect command is provided', (done) => {
   });
 
   task.on('close', (code) => {
-    clearTimeout(timeout);
-    console.log(output);
+    console.log('Output:', output);
     // Invalid command should exit with non-zero code
     expect(code).not.toBe(0);
     done();

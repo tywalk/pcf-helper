@@ -252,6 +252,21 @@ pcf-helper-run session [options]
 - `-f, --config <path>` - Config file path (default: `session.config.json`)
 - `-w, --watch` - Start pcf-scripts watch process to automatically rebuild on changes
 
+#### Configuration File
+
+Create a `session.config.json` file in your project root to avoid passing parameters repeatedly:
+
+```json
+{
+  "remoteEnvironmentUrl": "https://contoso-dev.crm.dynamics.com",
+  "remoteScriptToIntercept": "/webresources/pub_MyControl/bundle.js",
+  "remoteStylesheetToIntercept": "/webresources/pub_MyControl/css/MyControl.css",
+  "localBundlePath": "./out/controls/MyControl/bundle.js",
+  "localCssPath": "./out/controls/MyControl/css/MyControl.css",
+  "startWatch": false
+}
+```
+
 #### Examples
 
 ```bash
@@ -259,10 +274,13 @@ pcf-helper-run session [options]
 pcf-helper-run session
 
 # Session with custom configuration
-pcf-helper-run session -u "https://contoso.crm.dynamics.com" -s ./bundle.js
+pcf-helper-run session -u "https://contoso.crm.dynamics.com" -s /webresources/pub_MyControl/bundle.js -b ./bundle.js
 
 # Session with watch mode for automatic rebuilds
 pcf-helper-run session --watch
+
+# Session with custom config file
+pcf-helper-run session -f ./my-session.config.json
 ```
 
 ## ⚙️ Global Options
