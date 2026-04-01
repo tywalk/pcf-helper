@@ -1,6 +1,6 @@
 {
   "name": "@tywalk/pcf-helper-run",
-  "version": "1.2.15",
+  "version": "1.2.16",
   "description": "Unified CLI interface for Power Platform Component Framework (PCF) development — init, build, import, deploy, and manage PCF controls in Dataverse.",
   "main": "dist/index.js",
   "types": "./types/",
