@@ -30,11 +30,11 @@ program
     const startWatch = options.watch ?? config.startWatch ?? false;
 
     await task.runSession(
-      options.url ?? config.remoteEnvironmentUrl,
-      options.script ?? config.remoteScriptToIntercept,
-      options.stylesheet ?? config.remoteStylesheetToIntercept,
-      options.bundle ?? config.localBundlePath,
-      options.css ?? config.localCssPath,
+      options.url ?? config.remoteEnvironmentUrl ?? '',
+      options.script ?? config.remoteScriptToIntercept ?? '',
+      options.stylesheet ?? config.remoteStylesheetToIntercept ?? '',
+      options.bundle ?? config.localBundlePath ?? '',
+      options.css ?? config.localCssPath ?? '',
       startWatch
     );
 

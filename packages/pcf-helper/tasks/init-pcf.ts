@@ -4,18 +4,18 @@ import fs from 'fs';
 import logger from '@tywalk/color-logger';
 import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
 
-function pcfExistsInParent(path: string) {
+function pcfExistsInParent(path: string): string {
   let levels = 0;
   while (levels < 3) {
-    let pathFiles = fs.readdirSync(path);
-    let atRoot = pathFiles.some(file => extname(file).toLowerCase() === '.pcfproj');
+    const pathFiles = fs.readdirSync(path);
+    const atRoot = pathFiles.some(file => extname(file).toLowerCase() === '.pcfproj');
     if (atRoot) {
       return path;
     }
     path = join(path, '..');
     levels++;
   }
-  throw new Error('PCF project not found.');
+  throw new Error('PCF project not found within 3 directory levels.');
 }
 
 function runInit(path: string, name: string, publisherName: string, publisherPrefix: string, npm: boolean, verbose: boolean): number {
@@ -53,7 +53,13 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
   }
 
   if (!atRoot) {
-    path = pcfExistsInParent(path);
+    try {
+      path = pcfExistsInParent(path);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      logger.error(`[PCF Helper] Unable to locate PCF project: ${message}`);
+      return 1;
+    }
   }
 
   const pcfProjPath = fs.realpathSync(path);

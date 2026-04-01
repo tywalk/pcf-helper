@@ -42,7 +42,12 @@
     "typescript",
     "pac"
   ],
+  "license": "MIT",
   "author": "tywalk",
+  "homepage": "https://github.com/tywalk/pcf-helper#readme",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "bin": {
     "pcf-helper-upgrade": "dist/bin/upgrade.js",
     "pcf-helper-build": "dist/bin/build.js",

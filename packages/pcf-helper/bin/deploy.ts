@@ -15,7 +15,15 @@ import { handleResults, setupExecutionContext } from '../util/commandUtil';
 // Apply argument preprocessing for backward compatibility
 const { hadDeprecatedEnv } = applyArgumentPreprocessing(process.argv);
 
-function executeTasks(options: any, env: string): number {
+interface DeployOptions {
+  path: string;
+  verbose?: boolean;
+  timeout?: string;
+  environment?: string;
+  env?: string;
+}
+
+function executeTasks(options: DeployOptions, env: string): number {
   const upgradeResult = upgradeTask.runUpgrade(options.path, options.verbose || false);
   if (upgradeResult === 1) return 1;
 
@@ -50,19 +58,17 @@ addPathAndEnvironmentOptions(program)
 
     const env = resolveEnvironment(options, hadDeprecatedEnv);
 
-    var result = 0;
+    let result = 0;
     try {
       result = executeTasks(options, env);
       if (result === 0) {
         logger.log('Deploy complete!');
       }
-    } catch (e: any) {
-      logger.error('One or more tasks failed while deploying: ', (e && e.message) || 'unknown error');
+    } catch (e: unknown) {
+      logger.error('One or more tasks failed while deploying: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
     } finally {
       handleResults('deploy', logger, tick, result);
     }
-
-    process.exit(result);
   })
   .parse();

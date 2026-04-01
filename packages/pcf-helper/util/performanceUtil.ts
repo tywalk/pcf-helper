@@ -2,7 +2,7 @@ import { SpawnSyncReturns } from 'child_process';
 import util from 'util';
 import logger from '@tywalk/color-logger';
 
-var formatter = new Intl.DateTimeFormat('en-US', {
+const formatter = new Intl.DateTimeFormat('en-US', {
   hour: '2-digit',
   minute: '2-digit',
   second: '2-digit',
@@ -48,7 +48,7 @@ function handleTaskCompletion(task: SpawnSyncReturns<Buffer<ArrayBufferLike>>, n
         logger.debug('[PCF Helper] Error details:', task.signal, task.error.stack);
       }
     } else {
-      logger.error(`[PCF Helper] Unable to complete ${name}: One or more errors ocurred.`);
+      logger.error(`[PCF Helper] Unable to complete ${name}: One or more errors occurred.`);
     }
     logger.debug(formatMsToSec(`[PCF Helper] ${formatTime(new Date())} ${name} finished with errors in %is.\n`, duration));
   }

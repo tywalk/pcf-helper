@@ -5,6 +5,9 @@
   "repository": {
     "url": "https://github.com/tywalk/pcf-helper"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "test": "node test.js"
   },
@@ -27,7 +30,9 @@
     "typescript",
     "pac"
   ],
+  "license": "MIT",
   "author": "tywalk",
+  "homepage": "https://github.com/tywalk/pcf-helper#readme",
   "devDependencies": {
     "typescript": "^5.8.2"
   }

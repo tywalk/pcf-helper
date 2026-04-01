@@ -19,7 +19,7 @@ function runImport(path: string, env: string, verbose?: boolean, timeout?: numbe
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting import...\n');
   const tick = performance.now();
   if (!env) {
-    logger.warn('Path argument not provided. Assuming active auth profile organization.');
+    logger.warn('No environment argument provided. Assuming active auth profile organization.');
   }
 
   const zipDirPath = join(path, '/bin/release');

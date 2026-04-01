@@ -15,6 +15,15 @@ export type SessionOptions = {
   watch?: boolean;
 };
 
+interface FileConfig {
+  remoteEnvironmentUrl?: string;
+  remoteScriptToIntercept?: string;
+  remoteStylesheetToIntercept?: string;
+  localCssPath?: string;
+  localBundlePath?: string;
+  startWatch?: boolean;
+}
+
 /**
  * Loads configuration for the session task, supporting a combination of config file, environment variables, and CLI arguments.
  * The priority order is: CLI arguments > environment variables > config file > defaults.
@@ -22,13 +31,19 @@ export type SessionOptions = {
  * @param config Optional path to a JSON config file. If not provided, it will look for 'session.config.json' in the current working directory.
  * @returns An object containing the resolved configuration values for the session task.
  */
-function loadConfig(config?: string) {
+function loadConfig(config?: string): Partial<FileConfig> {
   // Load file config if exists
-  let fileConfig = {} as any;
+  let fileConfig: FileConfig = {};
   const configPath = path.join(process.cwd(), config || 'session.config.json');
   logger.log(`📁 Looking for config file at: ${configPath}`);
   if (fs.existsSync(configPath)) {
-    fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    try {
+      fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8')) as FileConfig;
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      logger.error(`❌ Failed to parse config file at ${configPath}: ${message}`);
+      return {};
+    }
     logger.log(`✅ Loaded config file: ${JSON.stringify(fileConfig, null, 2)}`);
   } else if (process.env.REMOTE_ENVIRONMENT_URL) {
     logger.warn(`⚠️ Config file not found, using defaults or CLI/env options.`);
@@ -47,7 +62,7 @@ function loadConfig(config?: string) {
     fileConfig.remoteScriptToIntercept;
 
   // If script is a relative path (doesn't start with http/https), combine with base URL
-  if (remoteScriptToIntercept && !remoteScriptToIntercept.startsWith('http')) {
+  if (remoteScriptToIntercept && remoteEnvironmentUrl && !remoteScriptToIntercept.startsWith('http')) {
     // Normalize the base URL (remove trailing slash)
     const baseUrl = remoteEnvironmentUrl.replace(/\/$/, '');
     // Normalize the script path (ensure it starts with /)
@@ -62,7 +77,7 @@ function loadConfig(config?: string) {
     fileConfig.remoteStylesheetToIntercept;
 
   // If stylesheet is a relative path (doesn't start with http/https), combine with base URL
-  if (remoteStylesheetToIntercept && !remoteStylesheetToIntercept.startsWith('http')) {
+  if (remoteStylesheetToIntercept && remoteEnvironmentUrl && !remoteStylesheetToIntercept.startsWith('http')) {
     // Normalize the base URL (remove trailing slash)
     const baseUrl = remoteEnvironmentUrl.replace(/\/$/, '');
     // Normalize the stylesheet path (ensure it starts with /)
@@ -177,7 +192,7 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
     logger.log('🚀 Starting ephemeral browser session...');
 
     // 1. Prepare context options (load session if it exists)
-    let contextOptions = {} as any;
+    const contextOptions: { storageState?: string } = {};
     if (fs.existsSync(STATE_FILE)) {
       logger.log('🔓 Loading previous login session...');
       contextOptions.storageState = STATE_FILE;
@@ -193,8 +208,13 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
       serviceWorkers: 'block', // Block service workers to prevent caching issues during development
     });
 
+    // Guard to prevent multiple concurrent or duplicate cleanups
+    let isCleaningUp = false;
+
     // Shared cleanup function to save state and close browser
     const cleanup = async (reason = 'unknown') => {
+      if (isCleaningUp) return;
+      isCleaningUp = true;
       try {
         logger.log(`💾 Saving session state (${reason})...`);
 
@@ -202,7 +222,7 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
         if (watchProcess && !watchProcess.killed) {
           logger.log('🛑 Terminating PCF watch process...');
           watchProcess.kill('SIGTERM');
-          
+
           // Give it a chance to exit gracefully, then force kill if needed
           setTimeout(() => {
             if (watchProcess && !watchProcess.killed) {
@@ -232,45 +252,40 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
       }
     };
 
-    // Handle process exit signals
-    process.on('SIGINT', async () => {
-      await cleanup('SIGINT');
-      process.exit(0);
+    // Handle process exit signals — use .then() chaining since Node does not await async handlers
+    process.on('SIGINT', () => {
+      cleanup('SIGINT').then(() => process.exit(0));
     });
 
-    process.on('SIGTERM', async () => {
-      await cleanup('SIGTERM');
-      process.exit(0);
+    process.on('SIGTERM', () => {
+      cleanup('SIGTERM').then(() => process.exit(0));
     });
 
-    process.on('beforeExit', async () => {
-      await cleanup('beforeExit');
+    process.on('beforeExit', () => {
+      cleanup('beforeExit').catch((err) => logger.debug('Cleanup error on beforeExit:', err));
     });
 
     // Handle uncaught exceptions
-    process.on('uncaughtException', async (error) => {
+    process.on('uncaughtException', (error) => {
       logger.error('Uncaught exception:', error);
-      await cleanup('uncaughtException');
-      process.exit(1);
+      cleanup('uncaughtException').then(() => process.exit(1));
     });
 
-    process.on('unhandledRejection', async (reason) => {
+    process.on('unhandledRejection', (reason) => {
       logger.error('Unhandled promise rejection:', reason);
-      await cleanup('unhandledRejection');
-      process.exit(1);
+      cleanup('unhandledRejection').then(() => process.exit(1));
     });
 
     // Handle browser disconnect
-    browser.on('disconnected', async () => {
+    browser.on('disconnected', () => {
       logger.log('Browser disconnected');
-      await cleanup('browser disconnected');
+      cleanup('browser disconnected').catch((err) => logger.debug('Cleanup error on browser disconnect:', err));
     });
 
     // Handle context close (when all pages in context are closed)
-    context.on('close', async () => {
+    context.on('close', () => {
       logger.log('Browser context closed');
-      await cleanup('context closed');
-      process.exit(0);
+      cleanup('context closed').then(() => process.exit(0));
     });
 
     // 3. Programmatically apply your network interception rule with pattern matching
@@ -292,28 +307,34 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
       logger.log(`✅ Intercepted script request: ${route.request().url()}`);
       logger.log(`   Serving local file: ${LOCAL_BUNDLE_PATH}`);
 
-      route.fulfill({
-        status: 200,
-        contentType: 'application/javascript',
-        body: fs.readFileSync(LOCAL_BUNDLE_PATH)
-      });
+      try {
+        const body = fs.readFileSync(LOCAL_BUNDLE_PATH);
+        route.fulfill({ status: 200, contentType: 'application/javascript', body });
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        logger.error(`❌ Failed to read local bundle at ${LOCAL_BUNDLE_PATH}: ${message}`);
+        route.fulfill({ status: 500, body: `// Bundle file not found: ${LOCAL_BUNDLE_PATH}` });
+      }
     });
 
     await context.route(route => {
       if (!route.href) {
         return false;
       }
-      // Match CSS URLs that end with the same path structure  
+      // Match CSS URLs that end with the same path structure
       return route.href.includes(stylesheetPattern);
     }, async (route) => {
       logger.log(`✅ Intercepted CSS request: ${route.request().url()}`);
       logger.log(`   Serving local file: ${LOCAL_CSS_PATH}`);
 
-      route.fulfill({
-        status: 200,
-        contentType: 'text/css',
-        body: fs.readFileSync(LOCAL_CSS_PATH)
-      });
+      try {
+        const body = fs.readFileSync(LOCAL_CSS_PATH);
+        route.fulfill({ status: 200, contentType: 'text/css', body });
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : String(e);
+        logger.error(`❌ Failed to read local CSS at ${LOCAL_CSS_PATH}: ${message}`);
+        route.fulfill({ status: 500, body: `/* CSS file not found: ${LOCAL_CSS_PATH} */` });
+      }
     });
 
     // 4. Open a new tab and navigate to your remote environment
