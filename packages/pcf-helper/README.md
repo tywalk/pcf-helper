@@ -60,6 +60,8 @@ pcf-helper-init -n <control-name> [options]
 | `--publisher-name <name>` | Publisher name for the control | ❌ | - |
 | `--publisher-prefix <prefix>` | Publisher prefix | ❌ | - |
 | `-p, --path <path>` | Path to create the project | ❌ | Current directory |
+| `-t, --template <template>` | Template for the component (`field`\|`dataset`) | ❌ | `field` |
+| `-f, --framework <framework>` | Rendering framework (`none`\|`react`) | ❌ | `react` |
 | `--run-npm-install` | Run npm install after init | ❌ | `true` |
 | `-V, --verbose` | Enable verbose logging | ❌ | `false` |
 | `-v, --version` | Display version | ❌ | - |
@@ -67,14 +69,21 @@ pcf-helper-init -n <control-name> [options]
 #### Example
 
 ```bash
-# Basic initialization
+# Basic initialization (field control with React)
 pcf-helper-init -n MyCustomControl
 
+# Dataset control with HTML (no framework)
+pcf-helper-init -n MyDatasetControl \
+  --template dataset \
+  --framework none
+
 # Full initialization with custom settings
-pcf-helper-init -n MyCustomControl \
+pcf-helper-init -n MyAdvancedControl \
   --publisher-name "Contoso" \
   --publisher-prefix "con" \
   -p ./my-pcf-project \
+  --template dataset \
+  --framework react \
   --verbose
 ```
 
@@ -173,18 +182,33 @@ pcf-helper-session [options]
 | `-V, --verbose` | Enable verbose logging | ❌ | `false` |
 | `-v, --version` | Display version | ❌ | - |
 
-## 🔧 API Reference
-const result = pcfHelper.runBuild('./my-solution', true, 120000);
+#### Configuration File Example
 
-// Initialize a new project
-const initResult = pcfHelper.runInit(
-  './new-project',
-  'MyControl',
-  'My Publisher',
-  'mp',
-  true,
-  true
-);
+Create a `session.config.json` file in your project root:
+
+```json
+{
+  "remoteEnvironmentUrl": "https://contoso-dev.crm.dynamics.com",
+  "remoteScriptToIntercept": "/webresources/pub_MyControl/bundle.js",
+  "remoteStylesheetToIntercept": "/webresources/pub_MyControl/css/MyControl.css",
+  "localBundlePath": "./out/controls/MyControl/bundle.js",
+  "localCssPath": "./out/controls/MyControl/css/MyControl.css",
+  "startWatch": false
+}
+```
+
+#### Examples
+
+```bash
+# Start session with config file
+pcf-helper-session
+
+# Session with custom configuration
+pcf-helper-session -u "https://contoso.crm.dynamics.com" -s /webresources/pub_MyControl/bundle.js -b ./bundle.js
+
+# Session with watch mode for automatic rebuilds (using config file)
+pcf-helper-session --watch
+```
 
 // Set logging level
 pcfHelper.setLogLevel('debug');

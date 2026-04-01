@@ -18,13 +18,27 @@ function pcfExistsInParent(path: string): string {
   throw new Error('PCF project not found within 3 directory levels.');
 }
 
-function runInit(path: string, name: string, publisherName: string, publisherPrefix: string, npm: boolean, verbose: boolean): number {
+function runInit(path: string, name: string, publisherName: string, publisherPrefix: string, template: string, framework: string, npm: boolean, verbose: boolean): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting init...\n');
   const tick = performance.now();
 
   path = path ?? process.cwd();
 
-  const initTask = spawnSync('pac pcf init', ['-ns', publisherPrefix, '-n', name, '-t', 'field', '-fw', 'react', '-o', path, '-npm', npm ? 'true' : 'false'], {
+  // Validate template and framework options
+  const validTemplates = ['field', 'dataset'];
+  const validFrameworks = ['none', 'react'];
+  
+  if (!validTemplates.includes(template)) {
+    logger.error(`[PCF Helper] Invalid template '${template}'. Valid options: ${validTemplates.join(', ')}`);
+    return 1;
+  }
+  
+  if (!validFrameworks.includes(framework)) {
+    logger.error(`[PCF Helper] Invalid framework '${framework}'. Valid options: ${validFrameworks.join(', ')}`);
+    return 1;
+  }
+  
+  const initTask = spawnSync('pac pcf init', ['-ns', publisherPrefix, '-n', name, '-t', template, '-fw', framework, '-o', path, '-npm', npm ? 'true' : 'false'], {
     cwd: process.cwd(),
     stdio: 'inherit',
     shell: true,
