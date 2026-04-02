@@ -16,7 +16,7 @@ function runUpgrade(path: string, verbose?: boolean): number {
   const spawnOpts = {
     cwd: process.cwd(),
     stdio: 'inherit' as const,
-    shell: false,
+    shell: true,
     timeout: 1000 * 60, // 1 min
   };
 
