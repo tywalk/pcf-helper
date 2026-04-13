@@ -5,5 +5,5 @@
     "declarationDir": "./types",                      /* Specify the output directory for generated declaration files. */
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "types"]
+  "exclude": ["node_modules", "dist", "types", "**/*.test.ts", "__tests__"]
 }
