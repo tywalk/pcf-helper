@@ -1,10 +1,6 @@
-/// <reference types="jest" />
-/// <reference types="node" />
-
 import { runInit } from '../tasks/init-pcf';
 import { spawnSync } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
 import logger from '@tywalk/color-logger';
 
 jest.mock('child_process');

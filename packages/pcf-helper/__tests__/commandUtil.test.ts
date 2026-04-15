@@ -1,3 +1,6 @@
+/// <reference types="jest" />
+/// <reference types="node" />
+
 import {
   setupExecutionContext,
   handleResults

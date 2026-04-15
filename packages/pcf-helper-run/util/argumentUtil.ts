@@ -8,7 +8,7 @@ export function getArg(args: string[], arg: string): string | undefined {
 export function getArgValue(args: string[], argOpts: string[], defaultIfExists?: string): string | undefined {
   const arg = args.find(a => argOpts.includes(a));
   if (typeof arg === 'undefined') {
-    return undefined;
+    return defaultIfExists;
   }
   
   const argIndex = args.indexOf(arg) + 1;

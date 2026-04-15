@@ -1,3 +1,6 @@
+/// <reference types="jest" />
+/// <reference types="node" />
+
 import { getArg, getArgValue } from '../util/argumentUtil';
 
 describe('pcf-helper-run argumentUtil', () => {
@@ -106,7 +109,7 @@ describe('pcf-helper-run argumentUtil', () => {
     });
 
     it('should handle boolean flags (no value)', () => {
-      const args = ['build', '-v', '--watch'];
+      const args = ['build', '--watch'];
       expect(getArg(args, '-v')).toBeUndefined(); // -v flag has no value
       expect(getArg(args, '--watch')).toBeUndefined();
     });
