@@ -52,7 +52,7 @@
   },
   "dependencies": {
     "@tywalk/color-logger": "^1.0.3",
-    "@tywalk/pcf-helper": "^1.10.0"
+    "@tywalk/pcf-helper": "^1.11.0"
   },
   "devDependencies": {
     "@semantic-release/git": "^10.0.1",

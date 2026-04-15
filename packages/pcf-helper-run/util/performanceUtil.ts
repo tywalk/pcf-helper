@@ -16,7 +16,7 @@ const formatter = new Intl.DateTimeFormat('en-US', {
  * @returns {string} The formatted number of seconds.
  */
 function formatMsToSec(format: string, ms: number): string {
-  const seconds = ms / 1000;
+  const seconds = (ms / 1000).toFixed(1);
   // %i truncates floats in util.format, so normalize to %f to preserve precision.
   const normalizedFormat = format.replace(/%i/g, '%f');
   return util.format(normalizedFormat, seconds);
