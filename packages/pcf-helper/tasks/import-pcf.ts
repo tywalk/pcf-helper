@@ -3,6 +3,7 @@ import { join, extname } from 'path';
 import fs from 'fs';
 import logger from '@tywalk/color-logger';
 import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
+import { resolveSpawnCommand } from '../util/commandUtil';
 
 /**
  * Imports a PCF solution into a specified Dataverse environment.
@@ -28,7 +29,8 @@ function runImport(path: string, env: string, verbose?: boolean, timeout?: numbe
   const zipFile = zipDirFiles.find(file => extname(file).toLowerCase() === '.zip') ?? '';
   const zipFilePath = join(zipDirPath, zipFile);
 
-  const task = spawnSync('pac', ['solution', 'import', '-env', env, '-p', zipFilePath, '-pc'], {
+  const importCommand = resolveSpawnCommand('pac', ['solution', 'import', '-env', env, '-p', zipFilePath, '-pc']);
+  const task = spawnSync(importCommand.command, importCommand.args, {
     cwd: process.cwd(),
     stdio: 'inherit',
     killSignal: 'SIGKILL',

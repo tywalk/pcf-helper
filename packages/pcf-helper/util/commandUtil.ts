@@ -1,6 +1,30 @@
 import { Logger } from '@tywalk/color-logger';
 import { formatMsToSec, formatTime } from './performanceUtil';
 
+type SpawnCommand = {
+  command: string;
+  args: string[];
+};
+
+export const resolveSpawnCommand = (command: string, args: string[]): SpawnCommand => {
+  if (command !== 'npm') {
+    return { command, args };
+  }
+
+  const npmExecPath = process.env.npm_execpath;
+  if (npmExecPath) {
+    return {
+      command: process.execPath,
+      args: [npmExecPath, ...args]
+    };
+  }
+
+  return {
+    command: process.platform === 'win32' ? 'npm.cmd' : 'npm',
+    args
+  };
+};
+
 export const setupExecutionContext = (options: CommonOptions) => {
   const logger = new Logger('log');
 

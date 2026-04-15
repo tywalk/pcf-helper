@@ -3,6 +3,7 @@ import { join, extname } from 'path';
 import fs from 'fs';
 import logger from '@tywalk/color-logger';
 import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
+import { resolveSpawnCommand } from '../util/commandUtil';
 
 function pcfExistsInParent(path: string): string {
   let levels = 0;
@@ -38,7 +39,8 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
     return 1;
   }
   
-  const initTask = spawnSync('pac', ['pcf', 'init', '-ns', publisherPrefix, '-n', name, '-t', template, '-fw', framework, '-o', path, '-npm', npm ? 'true' : 'false'], {
+  const initCommand = resolveSpawnCommand('pac', ['pcf', 'init', '-ns', publisherPrefix, '-n', name, '-t', template, '-fw', framework, '-o', path, '-npm', npm ? 'true' : 'false']);
+  const initTask = spawnSync(initCommand.command, initCommand.args, {
     cwd: process.cwd(),
     stdio: 'inherit',
     killSignal: 'SIGKILL',
@@ -55,7 +57,8 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
   const cdsPath = atRoot ? join(path, 'Solutions', name) : join(path, name);
 
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Initializing solution...\n');
-  const solutionTask = spawnSync('pac', ['solution', 'init', '-pn', publisherName, '-pp', publisherPrefix, '-o', cdsPath], {
+  const solutionCommand = resolveSpawnCommand('pac', ['solution', 'init', '-pn', publisherName, '-pp', publisherPrefix, '-o', cdsPath]);
+  const solutionTask = spawnSync(solutionCommand.command, solutionCommand.args, {
     cwd: process.cwd(),
     stdio: 'inherit',
     killSignal: 'SIGKILL',
@@ -78,7 +81,8 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
 
   const pcfProjPath = fs.realpathSync(path);
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Adding solution reference...', pcfProjPath);
-  const packageTask = spawnSync('pac', ['solution', 'add-reference', '-p', pcfProjPath], {
+  const packageCommand = resolveSpawnCommand('pac', ['solution', 'add-reference', '-p', pcfProjPath]);
+  const packageTask = spawnSync(packageCommand.command, packageCommand.args, {
     cwd: cdsPath,
     stdio: 'inherit',
     killSignal: 'SIGKILL',

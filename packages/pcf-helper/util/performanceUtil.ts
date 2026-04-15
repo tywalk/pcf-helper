@@ -18,8 +18,9 @@ const formatter = new Intl.DateTimeFormat('en-US', {
  * @returns {string} The formatted number of seconds.
  */
 function formatMsToSec(format: string, ms: number): string {
-  const seconds = ms / 1000;
-  return util.format(format, seconds);
+  const seconds = (ms / 1000).toFixed(1);
+  const normalizedFormat = format.replace(/%i/g, '%s');
+  return util.format(normalizedFormat, seconds);
 }
 
 /**
@@ -39,7 +40,7 @@ function handleTaskCompletion(task: SpawnSyncReturns<Buffer<ArrayBufferLike>>, n
     logger.debug(formatMsToSec(`[PCF Helper] ${formatTime(new Date())} ${name} finished in %is.\n`, duration));
   } else {
     if (task.error) {
-      if (task.signal === 'SIGTERM') {
+      if (task.signal === 'SIGTERM' || task.signal === 'SIGKILL') {
         logger.error(`[PCF Helper] Unable to complete ${name}. A timeout of 5 minutes was reached.`, task.error.message);
       } else {
         logger.error(`[PCF Helper] Unable to complete ${name}:`, task.signal, task.error.message);

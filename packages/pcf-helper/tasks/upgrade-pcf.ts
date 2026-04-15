@@ -1,5 +1,6 @@
 import { spawnSync } from 'child_process';
 import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
+import { resolveSpawnCommand } from '../util/commandUtil';
 import logger from '@tywalk/color-logger';
 
 /**
@@ -20,17 +21,20 @@ function runUpgrade(path: string, verbose?: boolean): number {
     timeout: 1000 * 60, // 1 min
   };
 
-  const solutionVersionTask = spawnSync('pac', ['solution', 'version', '-s', 'Solution', '-sp', path], spawnOpts);
+  const solutionVersionCommand = resolveSpawnCommand('pac', ['solution', 'version', '-s', 'Solution', '-sp', path]);
+  const solutionVersionTask = spawnSync(solutionVersionCommand.command, solutionVersionCommand.args, spawnOpts);
   if (solutionVersionTask.status !== 0) {
     return handleTaskCompletion(solutionVersionTask, 'upgrade', performance.now() - tick, verbose);
   }
 
-  const pcfVersionTask = spawnSync('pac', ['pcf', 'version', '-s', 'Manifest'], spawnOpts);
+  const pcfVersionCommand = resolveSpawnCommand('pac', ['pcf', 'version', '-s', 'Manifest']);
+  const pcfVersionTask = spawnSync(pcfVersionCommand.command, pcfVersionCommand.args, spawnOpts);
   if (pcfVersionTask.status !== 0) {
     return handleTaskCompletion(pcfVersionTask, 'upgrade', performance.now() - tick, verbose);
   }
 
-  const npmVersionTask = spawnSync('npm', ['version', 'patch', '--no-git-tag-version'], spawnOpts);
+  const npmVersionCommand = resolveSpawnCommand('npm', ['version', 'patch', '--no-git-tag-version']);
+  const npmVersionTask = spawnSync(npmVersionCommand.command, npmVersionCommand.args, spawnOpts);
   return handleTaskCompletion(npmVersionTask, 'upgrade', performance.now() - tick, verbose);
 }
 

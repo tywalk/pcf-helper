@@ -23,22 +23,22 @@ describe('performanceUtil', () => {
   describe('formatMsToSec', () => {
     it('should format milliseconds to seconds with provided format string', () => {
       const result = formatMsToSec('Task completed in %is', 5000);
-      expect(result).toBe('Task completed in 5s');
+      expect(result).toBe('Task completed in 5.0s');
     });
 
     it('should handle decimal seconds', () => {
       const result = formatMsToSec('Duration: %is', 1500);
-      expect(result).toBe('Duration: 1s'); // %i truncates to integer
+      expect(result).toBe('Duration: 1.5s');
     });
 
     it('should handle very small durations', () => {
       const result = formatMsToSec('Time: %is', 100);
-      expect(result).toBe('Time: 0s'); // %i truncates to integer
+      expect(result).toBe('Time: 0.1s');
     });
 
     it('should handle zero milliseconds', () => {
       const result = formatMsToSec('Time: %is', 0);
-      expect(result).toBe('Time: 0s');
+      expect(result).toBe('Time: 0.0s');
     });
 
     it('should work with util.format multiple placeholders', () => {
@@ -100,6 +100,17 @@ describe('performanceUtil', () => {
       );
     });
 
+    it('should handle SIGKILL timeout case', () => {
+      const task = { status: 1, signal: 'SIGKILL', error: new Error('timeout') } as any;
+
+      handleTaskCompletion(task, 'import', 300000, false);
+
+      expect(logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('A timeout of 5 minutes was reached'),
+        'timeout'
+      );
+    });
+
     it('should handle task error with message', () => {
       const error = new Error('build failed');
       const task = { status: 1, signal: 'SIGABRT', error } as any;
@@ -122,7 +133,7 @@ describe('performanceUtil', () => {
       
       handleTaskCompletion(task, 'build', 3500, false);
       
-      expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('3s'));
+      expect(logger.debug).toHaveBeenCalledWith(expect.stringContaining('3.5s'));
     });
 
     it('should handle task without error property', () => {

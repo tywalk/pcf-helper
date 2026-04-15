@@ -1,5 +1,6 @@
 import { spawnSync } from 'child_process';
 import { formatTime, handleTaskCompletion } from '../util/performanceUtil';
+import { resolveSpawnCommand } from '../util/commandUtil';
 import logger from '@tywalk/color-logger';
 
 /**
@@ -14,7 +15,8 @@ import logger from '@tywalk/color-logger';
 function runBuild(path: string, verbose: boolean, timeout?: number): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting build...\n');
   const tick = performance.now();
-  const task = spawnSync('dotnet', ['build', '--restore', '-c', 'Release', path], {
+  const buildCommand = resolveSpawnCommand('dotnet', ['build', '--restore', '-c', 'Release', path]);
+  const task = spawnSync(buildCommand.command, buildCommand.args, {
     cwd: process.cwd(),
     stdio: 'inherit',
     killSignal: 'SIGKILL',
