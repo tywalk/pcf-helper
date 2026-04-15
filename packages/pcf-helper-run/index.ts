@@ -328,6 +328,7 @@ withCommonOptions(program.command('session'))
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' session started.\n');
       if (!options.url || options.config) {
         const config = tasks.loadConfig(options.config || 'session.config.json');
+        // Use the config values from the config file, falling back to the CLI options if the config values are not set
         await tasks.runSession(
           config.remoteEnvironmentUrl ?? options.url,
           config.remoteScriptToIntercept ?? options.script,
