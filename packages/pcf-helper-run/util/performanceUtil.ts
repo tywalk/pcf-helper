@@ -17,7 +17,9 @@ const formatter = new Intl.DateTimeFormat('en-US', {
  */
 function formatMsToSec(format: string, ms: number): string {
   const seconds = ms / 1000;
-  return util.format(format, seconds);
+  // %i truncates floats in util.format, so normalize to %f to preserve precision.
+  const normalizedFormat = format.replace(/%i/g, '%f');
+  return util.format(normalizedFormat, seconds);
 }
 
 /**
