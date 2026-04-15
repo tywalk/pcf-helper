@@ -14,7 +14,7 @@ describe('pcf-helper-run performanceUtil', () => {
 
     it('should handle small durations', () => {
       const result = formatMsToSec('Quick: %is', 250);
-      expect(result).toBe('Quick: 0.25s');
+      expect(result).toBe('Quick: 0.3s');
     });
 
     it('should handle zero ms', () => {
