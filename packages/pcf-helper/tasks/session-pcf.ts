@@ -126,10 +126,20 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
     logger.error('❌ Remote script URL to intercept is required. Please provide it via CLI, config file, or environment variable.');
     process.exit(1);
   }
-  if (!localBundlePath) {
+  if (localBundlePath) {
+    if (!fs.existsSync(localBundlePath)) {
+      logger.error(`❌ Local bundle path specified does not exist at path: ${localBundlePath}`);
+      process.exit(1);
+    }
+  } else {
     logger.error('❌ Local bundle path is required. Please provide it via CLI, config file, or environment variable.');
     process.exit(1);
   }
+  if (localCssPath && !fs.existsSync(localCssPath)) {
+    logger.error(`❌ Local CSS path specified does not exist at path: ${localCssPath}`);
+    process.exit(1);
+  }
+
   const REMOTE_ENVIRONMENT_URL = remoteEnvironmentUrl;
   const REMOTE_SCRIPT_TO_INTERCEPT = remoteScriptToIntercept;
   const REMOTE_STYLESHEET_TO_INTERCEPT = remoteStylesheetToIntercept ?? '';

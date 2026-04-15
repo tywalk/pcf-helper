@@ -3,7 +3,6 @@ import {
   formatTime,
   handleTaskCompletion
 } from '../util/performanceUtil';
-import { spawnSync } from 'child_process';
 import logger from '@tywalk/color-logger';
 
 jest.mock('@tywalk/color-logger', () => ({
