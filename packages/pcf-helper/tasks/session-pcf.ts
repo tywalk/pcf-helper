@@ -126,16 +126,8 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
     logger.error('❌ Remote script URL to intercept is required. Please provide it via CLI, config file, or environment variable.');
     process.exit(1);
   }
-  if (!remoteStylesheetToIntercept) {
-    logger.error('❌ Remote stylesheet URL to intercept is required. Please provide it via CLI, config file, or environment variable.');
-    process.exit(1);
-  }
   if (!localBundlePath) {
     logger.error('❌ Local bundle path is required. Please provide it via CLI, config file, or environment variable.');
-    process.exit(1);
-  }
-  if (!localCssPath) {
-    logger.error('❌ Local CSS path is required. Please provide it via CLI, config file, or environment variable.');
     process.exit(1);
   }
   const REMOTE_ENVIRONMENT_URL = remoteEnvironmentUrl;
@@ -317,25 +309,28 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
       }
     });
 
-    await context.route(route => {
-      if (!route.href) {
-        return false;
-      }
-      // Match CSS URLs that end with the same path structure
-      return route.href.includes(stylesheetPattern);
-    }, async (route) => {
-      logger.log(`✅ Intercepted CSS request: ${route.request().url()}`);
-      logger.log(`   Serving local file: ${LOCAL_CSS_PATH}`);
+    // Only intercept the remote stylesheet request if both the local CSS path and the remote URL to intercept have been provided
+    if (LOCAL_CSS_PATH && REMOTE_STYLESHEET_TO_INTERCEPT) {
+      await context.route(route => {
+        if (!route.href) {
+          return false;
+        }
+        // Match CSS URLs that end with the same path structure
+        return route.href.includes(stylesheetPattern);
+      }, async (route) => {
+        logger.log(`✅ Intercepted CSS request: ${route.request().url()}`);
+        logger.log(`   Serving local file: ${LOCAL_CSS_PATH}`);
 
-      try {
-        const body = fs.readFileSync(LOCAL_CSS_PATH);
-        route.fulfill({ status: 200, contentType: 'text/css', body });
-      } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : String(e);
-        logger.error(`❌ Failed to read local CSS at ${LOCAL_CSS_PATH}: ${message}`);
-        route.fulfill({ status: 500, body: `/* CSS file not found: ${LOCAL_CSS_PATH} */` });
-      }
-    });
+        try {
+          const body = fs.readFileSync(LOCAL_CSS_PATH);
+          route.fulfill({ status: 200, contentType: 'text/css', body });
+        } catch (e: unknown) {
+          const message = e instanceof Error ? e.message : String(e);
+          logger.error(`❌ Failed to read local CSS at ${LOCAL_CSS_PATH}: ${message}`);
+          route.fulfill({ status: 500, body: `/* CSS file not found: ${LOCAL_CSS_PATH} */` });
+        }
+      });
+    }
 
     // 4. Open a new tab and navigate to your remote environment
     const page = await context.newPage();
