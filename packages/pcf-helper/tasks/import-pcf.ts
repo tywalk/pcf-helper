@@ -28,10 +28,10 @@ function runImport(path: string, env: string, verbose?: boolean, timeout?: numbe
   const zipFile = zipDirFiles.find(file => extname(file).toLowerCase() === '.zip') ?? '';
   const zipFilePath = join(zipDirPath, zipFile);
 
-  const task = spawnSync('pac solution import', ['-env', env, '-p', zipFilePath, '-pc'], {
+  const task = spawnSync('pac', ['solution', 'import', '-env', env, '-p', zipFilePath, '-pc'], {
     cwd: process.cwd(),
     stdio: 'inherit',
-    shell: true,
+    killSignal: 'SIGKILL',
     timeout: timeout ?? 1000 * 60 * 5, // 5 minutes
   });
 

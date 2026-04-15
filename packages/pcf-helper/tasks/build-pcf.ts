@@ -14,10 +14,10 @@ import logger from '@tywalk/color-logger';
 function runBuild(path: string, verbose: boolean, timeout?: number): number {
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Starting build...\n');
   const tick = performance.now();
-  const task = spawnSync('dotnet build', ['--restore', '-c', 'Release', path], {
+  const task = spawnSync('dotnet', ['build', '--restore', '-c', 'Release', path], {
     cwd: process.cwd(),
     stdio: 'inherit',
-    shell: true,
+    killSignal: 'SIGKILL',
     timeout: timeout ?? 1000 * 60 * 5 // 5 minutes
   });
   

@@ -38,10 +38,10 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
     return 1;
   }
   
-  const initTask = spawnSync('pac pcf init', ['-ns', publisherPrefix, '-n', name, '-t', template, '-fw', framework, '-o', path, '-npm', npm ? 'true' : 'false'], {
+  const initTask = spawnSync('pac', ['pcf', 'init', '-ns', publisherPrefix, '-n', name, '-t', template, '-fw', framework, '-o', path, '-npm', npm ? 'true' : 'false'], {
     cwd: process.cwd(),
     stdio: 'inherit',
-    shell: true,
+    killSignal: 'SIGKILL',
     timeout: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -55,10 +55,10 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
   const cdsPath = atRoot ? join(path, 'Solutions', name) : join(path, name);
 
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Initializing solution...\n');
-  const solutionTask = spawnSync('pac solution init', ['-pn', publisherName, '-pp', publisherPrefix, '-o', cdsPath], {
+  const solutionTask = spawnSync('pac', ['solution', 'init', '-pn', publisherName, '-pp', publisherPrefix, '-o', cdsPath], {
     cwd: process.cwd(),
     stdio: 'inherit',
-    shell: true,
+    killSignal: 'SIGKILL',
     timeout: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -78,10 +78,10 @@ function runInit(path: string, name: string, publisherName: string, publisherPre
 
   const pcfProjPath = fs.realpathSync(path);
   logger.log('[PCF Helper] ' + formatTime(new Date()) + ' Adding solution reference...', pcfProjPath);
-  const packageTask = spawnSync('pac solution add-reference', ['-p', pcfProjPath], {
+  const packageTask = spawnSync('pac', ['solution', 'add-reference', '-p', pcfProjPath], {
     cwd: cdsPath,
     stdio: 'inherit',
-    shell: true,
+    killSignal: 'SIGKILL',
     timeout: 1000 * 60 * 5, // 5 minutes
   });
   return handleTaskCompletion(packageTask, 'init', performance.now() - tick, verbose);

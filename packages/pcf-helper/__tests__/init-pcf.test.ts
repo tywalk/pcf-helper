@@ -160,8 +160,10 @@ describe('init-pcf task', () => {
       );
 
       expect(mockSpawnSync).toHaveBeenCalledWith(
-        'pac pcf init',
+        'pac',
         expect.arrayContaining([
+          'pcf',
+          'init',
           '-ns', 'mp',
           '-n', 'MyControl',
           '-t', 'dataset',
@@ -192,8 +194,8 @@ describe('init-pcf task', () => {
       );
 
       expect(mockSpawnSync).toHaveBeenCalledWith(
-        'pac pcf init',
-        expect.arrayContaining(['-npm', 'false']),
+        'pac',
+        expect.arrayContaining(['pcf', 'init', '-npm', 'false']),
         expect.any(Object)
       );
     });
@@ -302,7 +304,7 @@ describe('init-pcf task', () => {
       );
 
       const callArgs = mockSpawnSync.mock.calls.find((call) =>
-        call[0]?.includes('solution init')
+        call[0] === 'pac' && Array.isArray(call[1]) && call[1][0] === 'solution' && call[1][1] === 'init'
       );
 
       expect(callArgs).toBeDefined();
@@ -335,7 +337,7 @@ describe('init-pcf task', () => {
       );
 
       const solutionInitCall = mockSpawnSync.mock.calls.find((call) =>
-        call[0]?.includes('solution init')
+        call[0] === 'pac' && Array.isArray(call[1]) && call[1][0] === 'solution' && call[1][1] === 'init'
       );
       expect(solutionInitCall).toBeDefined();
     });
@@ -361,7 +363,7 @@ describe('init-pcf task', () => {
       );
 
       const hasAddRefCall = mockSpawnSync.mock.calls.some((call) =>
-        call[0] === 'pac solution add-reference'
+        call[0] === 'pac' && Array.isArray(call[1]) && call[1][0] === 'solution' && call[1][1] === 'add-reference'
       );
       expect(hasAddRefCall).toBe(true);
     });
