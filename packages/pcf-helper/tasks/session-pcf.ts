@@ -132,9 +132,9 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
   }
   const REMOTE_ENVIRONMENT_URL = remoteEnvironmentUrl;
   const REMOTE_SCRIPT_TO_INTERCEPT = remoteScriptToIntercept;
-  const REMOTE_STYLESHEET_TO_INTERCEPT = remoteStylesheetToIntercept;
+  const REMOTE_STYLESHEET_TO_INTERCEPT = remoteStylesheetToIntercept ?? '';
   const LOCAL_BUNDLE_PATH = path.resolve(localBundlePath);
-  const LOCAL_CSS_PATH = path.resolve(localCssPath);
+  const LOCAL_CSS_PATH = localCssPath ? path.resolve(localCssPath) : '';
 
   // Debug logging for URL construction
   logger.debug('🔍 Debug - Final URLs:');
