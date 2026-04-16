@@ -1,6 +1,7 @@
 import logger from '@tywalk/color-logger';
 import path from 'path';
 import fs from 'fs';
+import readline from 'readline';
 import { chromium } from 'playwright';
 import { spawn, ChildProcess } from 'child_process';
 
@@ -22,6 +23,37 @@ interface FileConfig {
   localCssPath?: string;
   localBundlePath?: string;
   startWatch?: boolean;
+}
+
+async function promptForWatchRestart(code: number | null, signal: NodeJS.Signals | null, attempt: number): Promise<boolean> {
+  if (!process.stdin.isTTY || !process.stdout.isTTY) {
+    logger.warn('⚠️ Watch failed but terminal is non-interactive. Skipping restart prompt.');
+    return false;
+  }
+
+  const reason = code !== null
+    ? `exit code ${code}`
+    : `signal ${signal ?? 'unknown'}`;
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  const prompt = `❓ PCF watch process failed (${reason}). Restart it? (y/N) [attempt ${attempt}]: `;
+
+  try {
+    const answer = await new Promise<string>((resolve) => {
+      rl.question(prompt, resolve);
+    });
+    const normalized = answer.trim().toLowerCase();
+    return normalized === 'y' || normalized === 'yes';
+  } catch (error) {
+    logger.warn('⚠️ Could not read restart response. Not restarting watch process.', error);
+    return false;
+  } finally {
+    rl.close();
+  }
 }
 
 /**
@@ -161,33 +193,75 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
 
   // Start watch process if requested
   let watchProcess: ChildProcess | undefined;
-  if (startWatch) {
+  let watchRestartAttempts = 0;
+  let isShuttingDown = false;
+
+  let terminateSession: ((reason: string) => Promise<void>) | undefined;
+
+  const startWatchProcess = (isRestart = false) => {
     logger.log('🔧 Starting pcf-scripts watch process...');
-    watchProcess = spawn('pcf-scripts', ['start', 'watch'], {
+    const child = spawn('pcf-scripts', ['start', 'watch'], {
       cwd: process.cwd(),
       stdio: ['inherit', 'pipe', 'pipe'],
       shell: true
     });
+    watchProcess = child;
 
-    watchProcess.stdout?.on('data', (data) => {
+    child.stdout?.on('data', (data) => {
       logger.log(`📦 [PCF Watch] ${data.toString().trim()}`);
     });
 
-    watchProcess.stderr?.on('data', (data) => {
+    child.stderr?.on('data', (data) => {
       logger.warn(`⚠️ [PCF Watch] ${data.toString().trim()}`);
     });
 
-    watchProcess.on('exit', (code) => {
-      if (code !== null && code !== 0) {
-        logger.error(`❌ PCF watch process exited with code ${code}`);
-      } else {
-        logger.log('✅ PCF watch process ended');
+    child.on('exit', async (code, signal) => {
+      if (watchProcess === child) {
+        watchProcess = undefined;
       }
+
+      if (isShuttingDown) {
+        logger.log('✅ PCF watch process ended');
+        return;
+      }
+
+      const failed = code !== 0;
+      if (!failed) {
+        logger.log('✅ PCF watch process ended');
+        return;
+      }
+
+      logger.error(`❌ PCF watch process exited unexpectedly (code: ${code}, signal: ${signal ?? 'none'})`);
+
+      const nextAttempt = watchRestartAttempts + 1;
+      const shouldRestart = await promptForWatchRestart(code, signal, nextAttempt);
+      if (!shouldRestart) {
+        logger.error('🛑 Watch restart declined. Terminating session.');
+        if (terminateSession) {
+          await terminateSession('watch restart declined');
+        }
+        process.exit(1);
+      }
+
+      watchRestartAttempts = nextAttempt;
+      logger.log(`🔁 Restarting PCF watch process (attempt ${watchRestartAttempts})...`);
+      startWatchProcess(true);
     });
 
-    watchProcess.on('error', (error) => {
+    child.on('error', async (error) => {
       logger.error('❌ Failed to start PCF watch process:', error);
+      if (isRestart) {
+        logger.error('❌ Restart attempt failed. Terminating session.');
+        if (terminateSession) {
+          await terminateSession('watch restart failed');
+        }
+        process.exit(1);
+      }
     });
+  };
+
+  if (startWatch) {
+    startWatchProcess();
   }
 
   await (async () => {
@@ -217,6 +291,7 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
     const cleanup = async (reason = 'unknown') => {
       if (isCleaningUp) return;
       isCleaningUp = true;
+      isShuttingDown = true;
       try {
         logger.log(`💾 Saving session state (${reason})...`);
 
@@ -253,6 +328,8 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
         logger.debug('Error during cleanup:', error);
       }
     };
+
+    terminateSession = cleanup;
 
     // Handle process exit signals — use .then() chaining since Node does not await async handlers
     process.on('SIGINT', () => {
