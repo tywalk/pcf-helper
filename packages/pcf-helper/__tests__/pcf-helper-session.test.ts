@@ -64,3 +64,22 @@ test('session errors if path does not exist', (done) => {
     done?.();
   });
 }, 10000);
+
+test('session errors when watch retry flag is used without watch', (done) => {
+  const task = spawn('node', ['./dist/bin/session.js', '--watch-retry', 'false']);
+
+  let output = '';
+  let stderrOutput = '';
+  task.stdout.on('data', (data) => {
+    output += data.toString();
+  });
+
+  task.stderr.on('data', (data) => {
+    stderrOutput += data.toString();
+  });
+
+  task.on('close', (code) => {
+    expect({ code, output, stderr: stderrOutput }).toMatchObject({ code: 1 });
+    done?.();
+  });
+}, 10000);

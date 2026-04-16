@@ -14,6 +14,7 @@ export type SessionOptions = {
   css?: string;
   config?: string;
   watch?: boolean;
+  watchRetry?: boolean;
 };
 
 interface FileConfig {
@@ -23,11 +24,12 @@ interface FileConfig {
   localCssPath?: string;
   localBundlePath?: string;
   startWatch?: boolean;
+  watchRetry?: boolean;
 }
 
 async function promptForWatchRestart(code: number | null, signal: NodeJS.Signals | null, attempt: number): Promise<boolean> {
   if (!process.stdin.isTTY || !process.stdout.isTTY) {
-    logger.warn('⚠️ Watch failed but terminal is non-interactive. Skipping restart prompt.');
+    logger.warn('⚠️ Watch failed but terminal is non-interactive. Cannot prompt for restart.');
     return false;
   }
 
@@ -134,6 +136,10 @@ function loadConfig(config?: string): Partial<FileConfig> {
     startWatch:
       process.env.START_WATCH === 'true' ||
       fileConfig.startWatch || false,
+    watchRetry:
+      process.env.WATCH_RETRY !== undefined
+        ? process.env.WATCH_RETRY === 'true'
+        : fileConfig.watchRetry ?? true,
   };
 }
 
@@ -147,9 +153,10 @@ function loadConfig(config?: string): Partial<FileConfig> {
  * @param localBundlePath The local file path to the JavaScript bundle that should be served when the remote script URL is requested.
  * @param localCssPath The local file path to the CSS file that should be served when the remote stylesheet URL is requested.
  * @param startWatch Optional flag to start the session in watch mode. If true, the process will kick off "pcf-scripts start watch" in parallel to automatically rebuild the bundle on changes.
+ * @param watchRetry Optional flag to automatically restart the watch process when it exits with a failure code. Defaults to true.
  * @returns A promise that resolves when the session is set up and running. The session will continue to run until the process is exited, at which point it will clean up and save state.
  */
-async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: string, remoteStylesheetToIntercept: string, localBundlePath: string, localCssPath: string, startWatch?: boolean) {
+async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept: string, remoteStylesheetToIntercept: string, localBundlePath: string, localCssPath: string, startWatch?: boolean, watchRetry = true) {
   if (!remoteEnvironmentUrl) {
     logger.error('❌ Remote environment URL is required. Please provide it via CLI, config file, or environment variable.');
     process.exit(1);
@@ -233,17 +240,24 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
 
       logger.error(`❌ PCF watch process exited unexpectedly (code: ${code}, signal: ${signal ?? 'none'})`);
 
-      const nextAttempt = watchRestartAttempts + 1;
-      const shouldRestart = await promptForWatchRestart(code, signal, nextAttempt);
-      if (!shouldRestart) {
-        logger.error('🛑 Watch restart declined. Terminating session.');
-        if (terminateSession) {
-          await terminateSession('watch restart declined');
+      if (!watchRetry) {
+        const nextAttempt = watchRestartAttempts + 1;
+        const shouldRestart = await promptForWatchRestart(code, signal, nextAttempt);
+        if (!shouldRestart) {
+          logger.error('🛑 Watch restart declined. Terminating session.');
+          if (terminateSession) {
+            await terminateSession('watch restart declined');
+          }
+          process.exit(1);
         }
-        process.exit(1);
+
+        watchRestartAttempts = nextAttempt;
+        logger.log(`🔁 Restarting PCF watch process (manual attempt ${watchRestartAttempts})...`);
+        startWatchProcess(true);
+        return;
       }
 
-      watchRestartAttempts = nextAttempt;
+      watchRestartAttempts += 1;
       logger.log(`🔁 Restarting PCF watch process (attempt ${watchRestartAttempts})...`);
       startWatchProcess(true);
     });

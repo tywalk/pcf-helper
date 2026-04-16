@@ -179,6 +179,7 @@ pcf-helper-session [options]
 | `-c, --css <path>` | Local CSS path | ❌ | - |
 | `-f, --config <path>` | Config file path | ❌ | `session.config.json` |
 | `-w, --watch` | Start pcf-scripts watch process | ❌ | `false` |
+| `--watch-retry <true\|false>` | Controls watch failure behavior when `--watch` is enabled: `true` auto-retries, `false` prompts for manual restart | ❌ | `true` |
 | `-V, --verbose` | Enable verbose logging | ❌ | `false` |
 | `-v, --version` | Display version | ❌ | - |
 
@@ -193,7 +194,8 @@ Create a `session.config.json` file in your project root:
   "remoteStylesheetToIntercept": "/webresources/pub_MyControl/css/MyControl.css",
   "localBundlePath": "./out/controls/MyControl/bundle.js",
   "localCssPath": "./out/controls/MyControl/css/MyControl.css",
-  "startWatch": false
+  "startWatch": false,
+  "watchRetry": true
 }
 ```
 

@@ -346,6 +346,7 @@ describe('session-pcf loadConfig', () => {
         localCssPath: undefined,
         localBundlePath: undefined,
         startWatch: false,
+        watchRetry: true
       });
     });
 
@@ -360,6 +361,7 @@ describe('session-pcf loadConfig', () => {
       const result = loadConfig();
 
       expect(result.remoteEnvironmentUrl).toBe('https://example.crm.dynamics.com');
+      expect(result.watchRetry).toBe(true);
     });
   });
 });
