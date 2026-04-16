@@ -242,6 +242,14 @@ async function runSession(remoteEnvironmentUrl: string, remoteScriptToIntercept:
 
       if (!watchRetry) {
         const nextAttempt = watchRestartAttempts + 1;
+        if (nextAttempt > 5) {
+          logger.error('🛑 Watch restart limit of 5 reached. Terminating session.');
+          if (terminateSession) {
+            await terminateSession('watch restart limit reached');
+          }
+          process.exit(1);
+        }
+
         const shouldRestart = await promptForWatchRestart(code, signal, nextAttempt);
         if (!shouldRestart) {
           logger.error('🛑 Watch restart declined. Terminating session.');
