@@ -47,14 +47,26 @@ interface InitOptions extends CommonOptions {
 }
 
 interface SessionOptions extends CommonOptions {
-  url: string;
-  script: string;
-  stylesheet: string;
-  bundle: string;
-  css: string;
+  url?: string;
+  script?: string;
+  stylesheet?: string;
+  bundle?: string;
+  css?: string;
   config?: string;
   watch?: boolean;
+  watchRetry?: boolean;
 }
+
+const parseWatchRetry = (value: string): boolean => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized === 'true') {
+    return true;
+  }
+  if (normalized === 'false') {
+    return false;
+  }
+  throw new Error('watch-retry must be either true or false');
+};
 
 // Configure the CLI program
 program
@@ -321,30 +333,46 @@ withCommonOptions(program.command('session'))
   .option('-c, --local-css <path>', 'local CSS path')
   .option('-f, --config <path>', 'config file path', 'session.config.json')
   .option('-w, --watch', 'start pcf-scripts watch process')
-  .action(async (options: SessionOptions) => {
+  .option('--watch-retry <enabled>', 'automatically retry watch process on failure (true|false)', parseWatchRetry)
+  .action(async (options: SessionOptions, command: Command) => {
     const { logger, tick } = setupExecutionContext(options);
 
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' session started.\n');
       if (!options.url || options.config) {
         const config = tasks.loadConfig(options.config || 'session.config.json');
+        const configWithWatchRetry = config as Partial<{ watchRetry: boolean }>;
+        const startWatch = options.watch ?? config.startWatch ?? false;
+        const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
+        if (watchRetryFlagWasSet && !startWatch) {
+          logger.error('❌ --watch-retry can only be used when --watch is enabled.');
+          process.exit(1);
+        }
+        const watchRetry = options.watchRetry ?? configWithWatchRetry.watchRetry ?? true;
         // Use the config values from the config file, falling back to the CLI options if the config values are not set
-        await tasks.runSession(
+        await (tasks.runSession as (...args: unknown[]) => Promise<void>)(
           config.remoteEnvironmentUrl ?? options.url,
           config.remoteScriptToIntercept ?? options.script,
           config.remoteStylesheetToIntercept ?? options.stylesheet,
           config.localBundlePath ?? options.bundle,
           config.localCssPath ?? options.css,
-          config.startWatch || options.watch
+          startWatch,
+          watchRetry
         );
       } else {
-        await tasks.runSession(
+        const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
+        if (watchRetryFlagWasSet && !options.watch) {
+          logger.error('❌ --watch-retry can only be used when --watch is enabled.');
+          process.exit(1);
+        }
+        await (tasks.runSession as (...args: unknown[]) => Promise<void>)(
           options.url,
           options.script,
           options.stylesheet,
           options.bundle,
           options.css,
-          options.watch
+          options.watch,
+          options.watchRetry ?? true
         );
       }
 

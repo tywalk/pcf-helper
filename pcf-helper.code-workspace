@@ -1,12 +1,13 @@
 {
 	"folders": [
 		{
-			"name": "PCF Helper",
 			"path": "./packages/pcf-helper"
 		},
 		{
-			"name": "PCF Helper Run",
 			"path": "./packages/pcf-helper-run"
+		},
+		{
+			"path": ".github"
 		}
 	],
 	"settings": {}

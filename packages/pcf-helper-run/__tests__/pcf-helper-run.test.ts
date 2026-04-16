@@ -79,3 +79,21 @@ test('runBuild exists', () => {
   const exists = typeof tasks?.runBuild === 'function';
   expect(exists).toBe(true);
 });
+
+test('session errors when watch retry flag is used without watch', (done) => {
+  const task = spawn('node', ['./dist/index.js', 'session', '--watch-retry', 'false']);
+
+  let output = '';
+  task.stdout.on('data', (data) => {
+    output += data.toString();
+  });
+
+  task.stderr.on('data', (data) => {
+    output += data.toString();
+  });
+
+  task.on('close', (code) => {
+    expect(code).toBe(1);
+    done();
+  });
+}, 10000);
