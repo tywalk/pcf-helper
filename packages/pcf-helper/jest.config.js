@@ -5,5 +5,7 @@ module.exports = {
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }]
-  }
+  },
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
+  coverageReporters: ['lcov', 'text-summary'],
 };

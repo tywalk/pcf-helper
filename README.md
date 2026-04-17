@@ -2,6 +2,9 @@
 
 [![npm version](https://badge.fury.io/js/%40tywalk%2Fpcf-helpers.svg)](https://badge.fury.io/js/%40tywalk%2Fpcf-helpers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![pcf-helper CI](https://github.com/tywalk/pcf-helper/actions/workflows/npm-publish-pcf-helper.yml/badge.svg)](https://github.com/tywalk/pcf-helper/actions/workflows/npm-publish-pcf-helper.yml)
+[![pcf-helper-run CI](https://github.com/tywalk/pcf-helper/actions/workflows/npm-publish-pcf-helper-run.yml/badge.svg)](https://github.com/tywalk/pcf-helper/actions/workflows/npm-publish-pcf-helper-run.yml)
+[![codecov](https://codecov.io/gh/tywalk/pcf-helper/graph/badge.svg)](https://codecov.io/gh/tywalk/pcf-helper)
 
 Command-line tools for **Power Platform Component Framework (PCF)** development, providing streamlined utilities to initialize, build, deploy, and manage your PCF controls in Dataverse environments.
 
