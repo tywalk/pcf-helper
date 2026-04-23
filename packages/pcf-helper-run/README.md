@@ -13,6 +13,7 @@ This package provides a single, consolidated command-line interface that brings 
 - [Quick Start](#-quick-start)
 - [Command Structure](#️-command-structure)
 - [Available Subcommands](#️-available-subcommands)
+- [Profiles](#-profiles)
 - [Usage Examples](#-detailed-command-reference)
 - [Workflow Examples](#-workflow-examples)
 - [Global Options](#️-global-options)
@@ -83,6 +84,66 @@ Each subcommand corresponds to a specific PCF operation, with consistent option 
 | `deploy` | Deploy to environment (upgrade + build + import) | `pcf-helper-deploy` |
 | `upgrade` | Upgrade project dependencies | `pcf-helper-upgrade` |
 | `session` | Manage development sessions | `pcf-helper-session` |
+| `profile` | Inspect named profiles (`list`, `show`, `current`, `paths`) | `pcf-helper-profile` |
+
+## 🧭 Profiles
+
+Every command accepts `-P, --profile <name>` so you don't have to retype `--environment`, `--path`, `--publisher-name`, or `--publisher-prefix` on every run. Profiles are defined in a JSON config file that's merged from two places (project overrides global):
+
+1. `~/.pcf-helper/config.json` — global defaults for this machine.
+2. `./pcf-helper.config.json` — project-specific overrides.
+
+Example config:
+
+```json
+{
+  "defaultProfile": "dev",
+  "profiles": {
+    "dev":  { "environment": "DevEnv",  "publisherName": "Tyler W", "publisherPrefix": "tyw" },
+    "test": { "environment": "TestEnv" },
+    "prod": { "environment": "ProdEnv" }
+  },
+  "session": {
+    "remoteEnvironmentUrl": "https://org.crm.dynamics.com",
+    "localBundlePath": "out/controls/MyControl/bundle.js",
+    "startWatch": true
+  }
+}
+```
+
+### Precedence (highest wins)
+
+For `build`, `deploy`, `import`, `upgrade`, `init`:
+1. Explicit CLI flags
+2. Active profile (`--profile <name>` or `defaultProfile`)
+3. Defaults
+
+For `session`:
+1. Explicit CLI flags
+2. Environment variables
+3. Active profile's `session` block
+4. Top-level `session` block in `pcf-helper.config.json`
+5. Legacy `session.config.json` (kept for backward compatibility)
+6. Defaults
+
+### Usage
+
+```bash
+# Use the default profile
+pcf-helper-run deploy -p ./MySolution
+
+# Pick a specific profile
+pcf-helper-run deploy -p ./MySolution --profile prod
+
+# CLI flags always win
+pcf-helper-run deploy -p ./MySolution --profile prod --environment HotfixEnv
+
+# Inspect what is configured
+pcf-helper-run profile list
+pcf-helper-run profile show prod
+pcf-helper-run profile current
+pcf-helper-run profile paths
+```
 
 ## 📖 Detailed Command Reference
 

@@ -1,6 +1,11 @@
 #!/usr/bin/env node
 import { Command, program } from 'commander';
 import * as tasks from '@tywalk/pcf-helper';
+import {
+  loadPcfHelperConfig,
+  resolveProfile,
+  Profile,
+} from '@tywalk/pcf-helper';
 import { Logger } from '@tywalk/color-logger';
 import { version } from './package.json';
 import { formatMsToSec, formatTime } from './util/performanceUtil';
@@ -21,26 +26,27 @@ const preprocessArgs = (args: string[]): { args: string[], hadDeprecatedEnv: boo
   return { args: processed, hadDeprecatedEnv };
 };
 
-// Preprocess arguments and track if deprecated flags were used  
+// Preprocess arguments and track if deprecated flags were used
 const { args: processedArgs, hadDeprecatedEnv } = preprocessArgs(process.argv.slice(2));
 process.argv = [...process.argv.slice(0, 2), ...processedArgs];
 
 interface CommonOptions {
   verbose?: boolean;
   timeout?: string;
+  profile?: string;
 }
 
 interface PathOptions extends CommonOptions {
-  path: string;
+  path?: string;
   environment?: string;
   env?: string; // Deprecated: backward compatibility
 }
 
 interface InitOptions extends CommonOptions {
-  path: string;
+  path?: string;
   name: string;
-  publisherName: string;
-  publisherPrefix: string;
+  publisherName?: string;
+  publisherPrefix?: string;
   template?: string;
   framework?: string;
   runNpmInstall?: boolean;
@@ -89,7 +95,8 @@ const withCommonOptions = (command: Command) => {
         throw new Error('Timeout must be a positive number');
       }
       return value;
-    });
+    })
+    .option('-P, --profile <name>', 'named profile from pcf-helper.config.json to use for defaults');
 };
 
 const withPathOptions = (command: Command) => {
@@ -101,21 +108,29 @@ const withPathOptions = (command: Command) => {
 
 // Helper function to resolve environment value with deprecation warning
 const resolveEnvironment = (options: PathOptions, logger: Logger): string => {
-  // Check if deprecated --env flag was used
   if (options.env && options.environment) {
-    logger.warn('⚠️  Both --env (deprecated) and --environment flags provided. Using --environment value.');
+    logger.warn('WARN: Both --env (deprecated) and --environment flags provided. Using --environment value.');
     return options.environment;
   } else if (options.env) {
-    // Show deprecation warning using the proper logger
     if (hadDeprecatedEnv) {
-      logger.warn('⚠️  The -env flag is DEPRECATED. Please use -e or --environment instead.');
+      logger.warn('WARN: The -env flag is DEPRECATED. Please use -e or --environment instead.');
     } else {
-      logger.warn('⚠️  The --env flag is DEPRECATED. Please use -e or --environment instead.');
+      logger.warn('WARN: The --env flag is DEPRECATED. Please use -e or --environment instead.');
     }
     return options.env;
   } else {
     return options.environment || '';
   }
+};
+
+// Loads a profile (if any) and logs which one is in use.
+const loadProfile = (profileName: string | undefined, logger: Logger): Profile | undefined => {
+  const { merged } = loadPcfHelperConfig();
+  const { name, profile } = resolveProfile(profileName, merged);
+  if (name) {
+    logger.log(`Using profile "${name}" from pcf-helper config.`);
+  }
+  return profile;
 };
 
 // Helper function to setup logger and performance tracking
@@ -152,21 +167,23 @@ const handleResults = (taskName: string, logger: Logger, tick: number, result: n
   }
 };
 
-// Define the upgrade command
+// upgrade
 withPathOptions(program.command('upgrade'))
   .description('upgrade PCF controls')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
+    const profile = loadProfile(options.profile, logger);
 
-    if (!options.path) {
-      logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+    const resolvedPath = options.path ?? profile?.path ?? '';
+    if (!resolvedPath) {
+      logger.error('Path argument is required. Use --path or set `path` in the active profile.');
       process.exit(1);
     }
 
     let result = 0;
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' upgrade started.\n');
-      result = tasks.runUpgrade(options.path, options.verbose || false);
+      result = tasks.runUpgrade(resolvedPath, options.verbose || false);
     } catch (e: unknown) {
       logger.error('[PCF Helper Run] One or more tasks failed while upgrading: ', e instanceof Error ? e.message : 'unknown error');
       result = 1;
@@ -175,14 +192,16 @@ withPathOptions(program.command('upgrade'))
     handleResults('upgrade', logger, tick, result);
   });
 
-// Define the build command  
+// build
 withPathOptions(program.command('build'))
   .description('build PCF controls')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
+    const profile = loadProfile(options.profile, logger);
 
-    if (!options.path) {
-      logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+    const resolvedPath = options.path ?? profile?.path ?? '';
+    if (!resolvedPath) {
+      logger.error('Path argument is required. Use --path or set `path` in the active profile.');
       process.exit(1);
     }
 
@@ -190,7 +209,7 @@ withPathOptions(program.command('build'))
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' build started.\n');
       result = tasks.runBuild(
-        options.path,
+        resolvedPath,
         options.verbose || false,
         options.timeout ? Number(options.timeout) : undefined
       );
@@ -202,18 +221,21 @@ withPathOptions(program.command('build'))
     handleResults('build', logger, tick, result);
   });
 
-// Define the import command
+// import
 withPathOptions(program.command('import'))
   .description('import PCF controls')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
+    const profile = loadProfile(options.profile, logger);
 
-    if (!options.path) {
-      logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+    const resolvedPath = options.path ?? profile?.path ?? '';
+    if (!resolvedPath) {
+      logger.error('Path argument is required. Use --path or set `path` in the active profile.');
       process.exit(1);
     }
 
-    const env = resolveEnvironment(options, logger);
+    const explicitEnv = resolveEnvironment(options, logger);
+    const env = explicitEnv !== '' ? explicitEnv : profile?.environment ?? '';
     if (env === '') {
       logger.warn('No environment specified. Defaulting to "local".');
     }
@@ -222,7 +244,7 @@ withPathOptions(program.command('import'))
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' import started.\n');
       result = tasks.runImport(
-        options.path,
+        resolvedPath,
         env,
         options.verbose || false,
         options.timeout ? Number(options.timeout) : undefined
@@ -235,18 +257,21 @@ withPathOptions(program.command('import'))
     handleResults('import', logger, tick, result);
   });
 
-// Define the deploy command (runs upgrade, build, and import)
+// deploy
 withPathOptions(program.command('deploy'))
   .description('deploy PCF controls (runs upgrade, build, and import)')
   .action((options: PathOptions) => {
     const { logger, tick } = setupExecutionContext(options);
+    const profile = loadProfile(options.profile, logger);
 
-    if (!options.path) {
-      logger.error('Path argument is required. Use --path to specify the path to solution folder.');
+    const resolvedPath = options.path ?? profile?.path ?? '';
+    if (!resolvedPath) {
+      logger.error('Path argument is required. Use --path or set `path` in the active profile.');
       process.exit(1);
     }
 
-    const env = resolveEnvironment(options, logger);
+    const explicitEnv = resolveEnvironment(options, logger);
+    const env = explicitEnv !== '' ? explicitEnv : profile?.environment ?? '';
     if (env === '') {
       logger.warn('No environment specified. Defaulting to "local".');
     }
@@ -255,23 +280,20 @@ withPathOptions(program.command('deploy'))
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' deploy started.\n');
 
-      // Run upgrade
-      const upgradeResult = tasks.runUpgrade(options.path, options.verbose || false);
+      const upgradeResult = tasks.runUpgrade(resolvedPath, options.verbose || false);
       if (upgradeResult === 1) {
         result = 1;
       } else {
-        // Run build
         const buildResult = tasks.runBuild(
-          options.path,
+          resolvedPath,
           options.verbose || false,
           options.timeout ? Number(options.timeout) : undefined
         );
         if (buildResult === 1) {
           result = 1;
         } else {
-          // Run import
           const importResult = tasks.runImport(
-            options.path,
+            resolvedPath,
             env,
             options.verbose || false,
             options.timeout ? Number(options.timeout) : undefined
@@ -289,29 +311,31 @@ withPathOptions(program.command('deploy'))
     handleResults('deploy', logger, tick, result);
   });
 
-// Define the init command
+// init
 withVerboseOption(program.command('init'))
   .description('initialize a new PCF project')
-  .requiredOption('-p, --path <path>', 'path to PCF folder')
   .requiredOption('-n, --name <name>', 'name of the control')
-  .requiredOption('--publisher-name <publisherName>', 'publisher name')
-  .requiredOption('--publisher-prefix <publisherPrefix>', 'publisher prefix')
-  .option('-t, --template <template>', 'template for the component (field|dataset)', 'field')
-  .option('-f, --framework <framework>', 'rendering framework for control (none|react)', 'react')
+  .option('-p, --path <path>', 'path to PCF folder')
+  .option('--publisher-name <publisherName>', 'publisher name')
+  .option('--publisher-prefix <publisherPrefix>', 'publisher prefix')
+  .option('-t, --template <template>', 'template for the component (field|dataset)')
+  .option('-f, --framework <framework>', 'rendering framework for control (none|react)')
   .option('--run-npm-install', 'run npm install after initialization', true)
+  .option('-P, --profile <name>', 'named profile from pcf-helper.config.json to use for defaults')
   .action((options: InitOptions) => {
     const { logger, tick } = setupExecutionContext(options);
+    const profile = loadProfile(options.profile, logger);
 
     let result = 0;
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' init started.\n');
       result = tasks.runInit(
-        options.path,
+        options.path ?? profile?.path ?? '',
         options.name,
-        options.publisherName,
-        options.publisherPrefix,
-        options.template || 'field',
-        options.framework || 'react',
+        options.publisherName ?? profile?.publisherName ?? '',
+        options.publisherPrefix ?? profile?.publisherPrefix ?? '',
+        options.template ?? profile?.template ?? 'field',
+        options.framework ?? profile?.framework ?? 'react',
         options.runNpmInstall !== false,
         options.verbose || false
       );
@@ -323,7 +347,7 @@ withVerboseOption(program.command('init'))
     handleResults('init', logger, tick, result);
   });
 
-// Define the session command
+// session
 withCommonOptions(program.command('session'))
   .description('run development session')
   .option('-u, --url <url>', 'remote environment URL')
@@ -339,42 +363,25 @@ withCommonOptions(program.command('session'))
 
     try {
       logger.log('[PCF Helper Run] ' + formatTime(new Date()) + ' session started.\n');
-      if (!options.url || options.config) {
-        const config = tasks.loadConfig(options.config || 'session.config.json');
-        const configWithWatchRetry = config as Partial<{ watchRetry: boolean }>;
-        const startWatch = options.watch ?? config.startWatch ?? false;
-        const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
-        if (watchRetryFlagWasSet && !startWatch) {
-          logger.error('❌ --watch-retry can only be used when --watch is enabled.');
-          process.exit(1);
-        }
-        const watchRetry = options.watchRetry ?? configWithWatchRetry.watchRetry ?? true;
-        // Use the config values from the config file, falling back to the CLI options if the config values are not set
-        await (tasks.runSession as (...args: unknown[]) => Promise<void>)(
-          config.remoteEnvironmentUrl ?? options.url,
-          config.remoteScriptToIntercept ?? options.script,
-          config.remoteStylesheetToIntercept ?? options.stylesheet,
-          config.localBundlePath ?? options.bundle,
-          config.localCssPath ?? options.css,
-          startWatch,
-          watchRetry
-        );
-      } else {
-        const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
-        if (watchRetryFlagWasSet && !options.watch) {
-          logger.error('❌ --watch-retry can only be used when --watch is enabled.');
-          process.exit(1);
-        }
-        await (tasks.runSession as (...args: unknown[]) => Promise<void>)(
-          options.url,
-          options.script,
-          options.stylesheet,
-          options.bundle,
-          options.css,
-          options.watch,
-          options.watchRetry ?? true
-        );
+      const config = tasks.loadConfig(options.config, options.profile);
+      const configWithWatchRetry = config as Partial<{ watchRetry: boolean }>;
+      const startWatch = options.watch ?? config.startWatch ?? false;
+      const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
+      if (watchRetryFlagWasSet && !startWatch) {
+        logger.error('Error: --watch-retry can only be used when --watch is enabled.');
+        process.exit(1);
       }
+      const watchRetry = options.watchRetry ?? configWithWatchRetry.watchRetry ?? true;
+
+      await (tasks.runSession as (...args: unknown[]) => Promise<void>)(
+        options.url ?? config.remoteEnvironmentUrl,
+        options.script ?? config.remoteScriptToIntercept,
+        options.stylesheet ?? config.remoteStylesheetToIntercept,
+        options.bundle ?? config.localBundlePath,
+        options.css ?? config.localCssPath,
+        startWatch,
+        watchRetry
+      );
 
       const tock = performance.now();
       logger.log(formatMsToSec('Session started successfully in %is.', tock - tick));
@@ -383,5 +390,71 @@ withCommonOptions(program.command('session'))
     }
   });
 
-// Parse the command line arguments
+// profile subcommand
+const profileCmd = program.command('profile').description('inspect pcf-helper profiles from pcf-helper.config.json');
+
+profileCmd
+  .command('list')
+  .description('list all available profile names')
+  .action(() => {
+    const { merged, sources } = loadPcfHelperConfig();
+    const names = Object.keys(merged.profiles ?? {});
+    const isDefault = (n: string) => (merged.defaultProfile === n ? ' (default)' : '');
+
+    if (sources.length === 0) {
+      console.log('No pcf-helper config files found.');
+      console.log('Looked at:');
+      console.log('  - global: ~/.pcf-helper/config.json');
+      console.log('  - project: ./pcf-helper.config.json');
+      return;
+    }
+
+    console.log('Loaded config from:');
+    for (const s of sources) console.log(`  - ${s}`);
+
+    if (names.length === 0) {
+      console.log('\nNo profiles defined.');
+      return;
+    }
+
+    console.log('\nProfiles:');
+    for (const n of names) console.log(`  - ${n}${isDefault(n)}`);
+  });
+
+profileCmd
+  .command('show <name>')
+  .description('print the resolved contents of a profile')
+  .action((name: string) => {
+    const { merged } = loadPcfHelperConfig();
+    const profile = merged.profiles?.[name];
+    if (!profile) {
+      const available = Object.keys(merged.profiles ?? {});
+      console.error(`Profile "${name}" not found. Available: ${available.join(', ') || '(none)'}`);
+      process.exit(1);
+    }
+    console.log(JSON.stringify(profile, null, 2));
+  });
+
+profileCmd
+  .command('current')
+  .description('print the profile that would be used by default')
+  .action(() => {
+    const { merged } = loadPcfHelperConfig();
+    if (!merged.defaultProfile) {
+      console.log('No defaultProfile set.');
+      return;
+    }
+    console.log(merged.defaultProfile);
+  });
+
+profileCmd
+  .command('paths')
+  .description('print the global and project config paths')
+  .action(() => {
+    const { projectPath, globalPath, sources } = loadPcfHelperConfig();
+    console.log(`global:  ${globalPath}`);
+    console.log(`project: ${projectPath}`);
+    console.log(`loaded:  ${sources.length ? sources.join(', ') : '(none)'}`);
+  });
+
 program.parse();
