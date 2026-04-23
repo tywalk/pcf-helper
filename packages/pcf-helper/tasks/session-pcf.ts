@@ -4,6 +4,12 @@ import fs from 'fs';
 import readline from 'readline';
 import { chromium } from 'playwright';
 import { spawn, ChildProcess } from 'child_process';
+import {
+  SessionConfig,
+  loadPcfHelperConfig,
+  mergeSessionConfig,
+  resolveProfile,
+} from '../util/configUtil';
 
 export type SessionOptions = {
   verbose?: boolean;
@@ -15,6 +21,7 @@ export type SessionOptions = {
   config?: string;
   watch?: boolean;
   watchRetry?: boolean;
+  profile?: string;
 };
 
 interface FileConfig {
@@ -59,31 +66,80 @@ async function promptForWatchRestart(code: number | null, signal: NodeJS.Signals
 }
 
 /**
- * Loads configuration for the session task, supporting a combination of config file, environment variables, and CLI arguments.
- * The priority order is: CLI arguments > environment variables > config file > defaults.
- * It also handles constructing full URLs for the script and stylesheet to intercept, allowing for relative paths in the config that are combined with the base URL.
- * @param config Optional path to a JSON config file. If not provided, it will look for 'session.config.json' in the current working directory.
- * @returns An object containing the resolved configuration values for the session task.
+ * Loads configuration for the session task, supporting a combination of
+ * config file, environment variables, and CLI arguments.
+ *
+ * Precedence (highest wins, field-level):
+ *   CLI args (handled by caller) > env vars > active profile session block
+ *   > unified config session block > legacy session.config.json > defaults
+ *
+ * The legacy `session.config.json` path keeps working so existing setups do
+ * not break when upgrading.
+ *
+ * @param config Optional path to a legacy JSON config file. If not provided,
+ *   looks for `session.config.json` in the current working directory.
+ * @param profileName Optional profile name. If provided, that profile's
+ *   session block layers over the top-level session block.
+ * @returns Resolved session config values.
  */
-function loadConfig(config?: string): Partial<FileConfig> {
-  // Load file config if exists
+function loadConfig(config?: string, profileName?: string): Partial<FileConfig> {
+  // Legacy: load session.config.json (or user-specified config path) if it exists.
   let fileConfig: FileConfig = {};
+  let fileConfigLoaded = false;
   const configPath = path.join(process.cwd(), config || 'session.config.json');
   logger.log(`📁 Looking for config file at: ${configPath}`);
   if (fs.existsSync(configPath)) {
     try {
       fileConfig = JSON.parse(fs.readFileSync(configPath, 'utf8')) as FileConfig;
+      fileConfigLoaded = true;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       logger.error(`❌ Failed to parse config file at ${configPath}: ${message}`);
       return {};
     }
     logger.log(`✅ Loaded config file: ${JSON.stringify(fileConfig, null, 2)}`);
-  } else if (process.env.REMOTE_ENVIRONMENT_URL) {
-    logger.warn(`⚠️ Config file not found, using defaults or CLI/env options.`);
-  } else {
-    return {}; // No config file and no env vars, return empty config to use defaults
   }
+
+  // Unified pcf-helper.config.json: load top-level session block and
+  // profile-specific session block (if a profile is in use).
+  let unifiedSession: SessionConfig = {};
+  let profileSession: SessionConfig = {};
+  try {
+    const loaded = loadPcfHelperConfig();
+    unifiedSession = loaded.merged.session ?? {};
+    const { profile } = resolveProfile(profileName, loaded.merged);
+    profileSession = profile?.session ?? {};
+  } catch (e: unknown) {
+    // resolveProfile throws on unknown profile name; surface but don't abort —
+    // callers that strictly need the profile will fail later in command layer.
+    const message = e instanceof Error ? e.message : String(e);
+    logger.warn(`⚠️ Unified config profile resolution failed: ${message}`);
+  }
+
+  // Merge (lowest precedence first): legacy file → unified → profile-specific.
+  const mergedSession: SessionConfig = mergeSessionConfig(
+    fileConfig,
+    unifiedSession,
+    profileSession,
+  );
+
+  if (
+    !fileConfigLoaded &&
+    Object.keys(unifiedSession).length === 0 &&
+    Object.keys(profileSession).length === 0 &&
+    !process.env.REMOTE_ENVIRONMENT_URL
+  ) {
+    return {}; // nothing to offer; use defaults
+  }
+
+  if (!fileConfigLoaded && process.env.REMOTE_ENVIRONMENT_URL) {
+    logger.warn(`⚠️ Config file not found, using defaults or CLI/env options.`);
+  }
+
+  // Use the merged view from here down. Field-level env overrides below still
+  // preserve env-var precedence over file-based values.
+  const effective = mergedSession as FileConfig;
+  fileConfig = effective;
 
   // Get the base URL first
   const remoteEnvironmentUrl =

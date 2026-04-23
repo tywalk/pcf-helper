@@ -11,6 +11,7 @@ This package provides discrete command-line utilities for each PCF operation, ma
 
 - [Installation](#installation)
 - [Available Commands](#available-commands)
+- [Profiles](#-profiles)
 - [Command Reference](#command-reference)
 - [API Reference](#api-reference)
 - [Troubleshooting](#troubleshooting)
@@ -41,6 +42,74 @@ Each command is available as a standalone executable:
 | `pcf-helper-deploy` | Deploy controls (upgrade + build + import) | `pcf-helper-deploy [options]` |
 | `pcf-helper-upgrade` | Upgrade project dependencies | `pcf-helper-upgrade [options]` |
 | `pcf-helper-session` | Manage development sessions | `pcf-helper-session [options]` |
+| `pcf-helper-profile` | List/inspect named profiles from config | `pcf-helper-profile <list\|show\|current\|paths>` |
+
+## 🧭 Profiles
+
+Every command accepts a `-P, --profile <name>` flag that pulls defaults from a JSON config file, so you don't have to retype `--publisher-name`, `--publisher-prefix`, `--environment`, or `--path` every time you run deploy/build/import/init.
+
+### Config lookup
+
+Config is merged from two locations (project overrides global field-by-field):
+
+1. `~/.pcf-helper/config.json` — global defaults for every project on this machine.
+2. `./pcf-helper.config.json` — project-specific overrides, placed in the directory you run the command from.
+
+### Config shape
+
+```json
+{
+  "defaultProfile": "dev",
+  "profiles": {
+    "dev":  { "environment": "DevEnv",  "publisherName": "Tyler W", "publisherPrefix": "tyw" },
+    "test": { "environment": "TestEnv" },
+    "prod": { "environment": "ProdEnv" }
+  },
+  "session": {
+    "remoteEnvironmentUrl": "https://org.crm.dynamics.com",
+    "localBundlePath": "out/controls/MyControl/bundle.js",
+    "startWatch": true
+  }
+}
+```
+
+- `profiles.*` — bundles of defaults that feed `build`, `deploy`, `import`, `upgrade`, `init`, and (optionally) `session`.
+- `session` — shared session-command settings. Used when there is no `session.config.json` in the project, or field-by-field where `session.config.json` does not supply a value.
+- A profile may also have its own `session` block (`profiles.dev.session`) which layers over the top-level `session` block when that profile is active.
+
+### Precedence (highest wins)
+
+For build/deploy/import/upgrade/init:
+1. Explicit CLI flags (`--environment`, `--path`, etc.)
+2. Active profile (`--profile <name>` or `defaultProfile`)
+3. Defaults
+
+For session:
+1. Explicit CLI flags
+2. Environment variables (`REMOTE_ENVIRONMENT_URL`, etc.)
+3. Active profile's `session` block
+4. Top-level `session` block in `pcf-helper.config.json`
+5. Legacy `session.config.json` (kept for backward compatibility)
+6. Defaults
+
+### Usage
+
+```bash
+# Use the default profile — deploy to "dev" based on the config above
+pcf-helper-deploy -p ./MySolution
+
+# Pick a specific profile
+pcf-helper-deploy -p ./MySolution --profile prod
+
+# CLI always wins — override one field from the profile
+pcf-helper-deploy -p ./MySolution --profile prod --environment HotfixEnv
+
+# Inspect what is configured
+pcf-helper-profile list
+pcf-helper-profile show prod
+pcf-helper-profile current
+pcf-helper-profile paths
+```
 
 ## 📖 Command Reference
 

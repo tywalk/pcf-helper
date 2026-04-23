@@ -4,8 +4,8 @@ import { version } from '../package.json';
 import { Command } from 'commander';
 import {
   applyArgumentPreprocessing,
-  resolveEnvironment,
-  addPathAndEnvironmentOptions
+  addPathAndEnvironmentOptions,
+  resolvePathAndEnvironment,
 } from '../util/argumentUtil';
 import { handleResults, setupExecutionContext } from '../util/commandUtil';
 
@@ -24,11 +24,16 @@ addPathAndEnvironmentOptions(program)
 
     logger.log('PCF Helper version', version);
 
-    const env = resolveEnvironment(options, hadDeprecatedEnv);
+    const { path, environment } = resolvePathAndEnvironment(options, hadDeprecatedEnv);
+
+    if (!path) {
+      logger.error('Path argument is required. Use --path or set `path` in the active profile.');
+      process.exit(1);
+    }
 
     const result = task.runImport(
-      options.path,
-      env,
+      path,
+      environment,
       options.verbose || false,
       options.timeout ? Number(options.timeout) : undefined
     );

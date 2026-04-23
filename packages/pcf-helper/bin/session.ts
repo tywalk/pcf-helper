@@ -2,8 +2,9 @@
 import * as task from '../tasks/session-pcf';
 import { version } from '../package.json';
 import { Command } from 'commander';
-import { handleResults, setupExecutionContext } from '../util/commandUtil';
+import { setupExecutionContext } from '../util/commandUtil';
 import { formatMsToSec } from '../util/performanceUtil';
+import { addProfileOption } from '../util/argumentUtil';
 
 const program = new Command();
 
@@ -30,34 +31,36 @@ program
   .option('-c, --css <path>', 'local CSS path')
   .option('-f, --config <path>', 'config file path', 'session.config.json')
   .option('-w, --watch', 'start pcf-scripts watch process')
-  .option('--watch-retry <enabled>', 'automatically retry watch process on failure (true|false)', parseWatchRetry)
-  .action(async (options: task.SessionOptions, command: Command) => {
-    const { logger, tick } = setupExecutionContext(options);
+  .option('--watch-retry <enabled>', 'automatically retry watch process on failure (true|false)', parseWatchRetry);
 
-    logger.log('PCF Helper version', version);
+addProfileOption(program).action(async (options: task.SessionOptions, command: Command) => {
+  const { logger, tick } = setupExecutionContext(options);
 
-    const config = task.loadConfig(options.config);
+  logger.log('PCF Helper version', version);
 
-    // Priority: CLI args > config file > environment variables
-    const startWatch = options.watch ?? config.startWatch ?? false;
-    const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
-    if (watchRetryFlagWasSet && !startWatch) {
-      logger.error('❌ --watch-retry can only be used when --watch is enabled.');
-      process.exit(1);
-    }
-    const watchRetry = options.watchRetry ?? config.watchRetry ?? true;
+  const config = task.loadConfig(options.config, options.profile);
 
-    await task.runSession(
-      options.url ?? config.remoteEnvironmentUrl ?? '',
-      options.script ?? config.remoteScriptToIntercept ?? '',
-      options.stylesheet ?? config.remoteStylesheetToIntercept ?? '',
-      options.bundle ?? config.localBundlePath ?? '',
-      options.css ?? config.localCssPath ?? '',
-      startWatch,
-      watchRetry
-    );
+  // Priority: CLI args > config (which itself layers profile > unified > legacy)
+  const startWatch = options.watch ?? config.startWatch ?? false;
+  const watchRetryFlagWasSet = command.getOptionValueSource('watchRetry') === 'cli';
+  if (watchRetryFlagWasSet && !startWatch) {
+    logger.error('❌ --watch-retry can only be used when --watch is enabled.');
+    process.exit(1);
+  }
+  const watchRetry = options.watchRetry ?? config.watchRetry ?? true;
 
-    const tock = performance.now();
-    logger.log(formatMsToSec('Session started successfully in %is.', tock - tick));
-  })
-  .parse();
+  await task.runSession(
+    options.url ?? config.remoteEnvironmentUrl ?? '',
+    options.script ?? config.remoteScriptToIntercept ?? '',
+    options.stylesheet ?? config.remoteStylesheetToIntercept ?? '',
+    options.bundle ?? config.localBundlePath ?? '',
+    options.css ?? config.localCssPath ?? '',
+    startWatch,
+    watchRetry
+  );
+
+  const tock = performance.now();
+  logger.log(formatMsToSec('Session started successfully in %is.', tock - tick));
+});
+
+program.parse();

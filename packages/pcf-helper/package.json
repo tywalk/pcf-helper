@@ -54,7 +54,8 @@
     "pcf-helper-import": "dist/bin/import.js",
     "pcf-helper-deploy": "dist/bin/deploy.js",
     "pcf-helper-init": "dist/bin/init.js",
-    "pcf-helper-session": "dist/bin/session.js"
+    "pcf-helper-session": "dist/bin/session.js",
+    "pcf-helper-profile": "dist/bin/profile.js"
   },
   "devDependencies": {
     "@semantic-release/git": "^10.0.1",

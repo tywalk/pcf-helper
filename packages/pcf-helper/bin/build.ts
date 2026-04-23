@@ -3,6 +3,7 @@ import * as task from '../tasks/build-pcf';
 import { version } from '../package.json';
 import { Command } from 'commander';
 import { handleResults, setupExecutionContext } from '../util/commandUtil';
+import { addProfileOption, resolveProfileOnly } from '../util/argumentUtil';
 
 const program = new Command();
 
@@ -18,18 +19,28 @@ program
     }
     return value;
   })
-  .requiredOption('-p, --path <path>', 'path to solution folder')
-  .action((options) => {
-    const { logger, tick } = setupExecutionContext(options);
+  .option('-p, --path <path>', 'path to solution folder');
 
-    logger.log('PCF Helper version', version);
+addProfileOption(program).action((options) => {
+  const { logger, tick } = setupExecutionContext(options);
 
-    const result = task.runBuild(
-      options.path,
-      options.verbose || false,
-      options.timeout ? Number(options.timeout) : undefined
-    );
+  logger.log('PCF Helper version', version);
 
-    handleResults('build', logger, tick, result);
-  })
-  .parse();
+  const { profile } = resolveProfileOnly(options.profile);
+  const resolvedPath: string = options.path ?? profile?.path ?? '';
+
+  if (!resolvedPath) {
+    logger.error('Path argument is required. Use --path or set `path` in the active profile.');
+    process.exit(1);
+  }
+
+  const result = task.runBuild(
+    resolvedPath,
+    options.verbose || false,
+    options.timeout ? Number(options.timeout) : undefined
+  );
+
+  handleResults('build', logger, tick, result);
+});
+
+program.parse();
