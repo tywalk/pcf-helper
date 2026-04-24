@@ -1,0 +1,43 @@
+{
+  "_comment_1": "Starter pcf-helper config. Copy this file to either location (remove the _comment_* keys first):",
+  "_comment_2": "  - Global (applies to every PCF project on this machine): ~/.pcf-helper/config.json  (Windows: %USERPROFILE%\\.pcf-helper\\config.json)",
+  "_comment_3": "  - Project (overrides global for this repo): ./pcf-helper.config.json",
+  "_comment_4": "Precedence: CLI flags > active profile > top-level session > legacy session.config.json > defaults.",
+  "_comment_5": "Run `pcf-helper-run profile list` to see what is currently resolved.",
+
+  "defaultProfile": "dev",
+
+  "profiles": {
+    "dev": {
+      "environment": "MyDevOrg",
+      "publisherName": "Tyler W",
+      "publisherPrefix": "tyw",
+      "path": "./MySolution",
+      "session": {
+        "remoteEnvironmentUrl": "https://my-dev.crm.dynamics.com",
+        "remoteScriptToIntercept": "/webresources/tyw_MyControl/bundle.js",
+        "localBundlePath": "./out/controls/MyControl/bundle.js",
+        "startWatch": true
+      }
+    },
+
+    "test": {
+      "environment": "MyTestOrg"
+    },
+
+    "prod": {
+      "environment": "MyProdOrg"
+    }
+  },
+
+  "session": {
+    "_comment": "Shared session defaults. A profile's own `session` block wins over these when that profile is active.",
+    "remoteEnvironmentUrl": "https://my-dev.crm.dynamics.com",
+    "remoteScriptToIntercept": "/webresources/tyw_MyControl/bundle.js",
+    "remoteStylesheetToIntercept": "/webresources/tyw_MyControl/css/MyControl.css",
+    "localBundlePath": "./out/controls/MyControl/bundle.js",
+    "localCssPath": "./out/controls/MyControl/css/MyControl.css",
+    "startWatch": false,
+    "watchRetry": true
+  }
+}

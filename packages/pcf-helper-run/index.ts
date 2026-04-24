@@ -4,7 +4,9 @@ import * as tasks from '@tywalk/pcf-helper';
 import {
   loadPcfHelperConfig,
   resolveProfile,
+  runProfileInit,
   Profile,
+  ProfileInitOptions,
 } from '@tywalk/pcf-helper';
 import { Logger } from '@tywalk/color-logger';
 import { version } from './package.json';
@@ -457,4 +459,46 @@ profileCmd
     console.log(`loaded:  ${sources.length ? sources.join(', ') : '(none)'}`);
   });
 
-program.parse();
+profileCmd
+  .command('init <name>')
+  .description('create a new profile in pcf-helper.config.json (project or global)')
+  .option('-e, --environment <env>', 'Dataverse environment name')
+  .option('--publisher-name <name>', 'publisher display name')
+  .option('--publisher-prefix <prefix>', 'publisher prefix (2-8 chars)')
+  .option('-p, --path <path>', 'path to PCF solution folder')
+  .option('--template <template>', 'control template (field|dataset)')
+  .option('--framework <framework>', 'rendering framework (none|react)')
+  .option('--session-url <url>', 'session: remote environment URL')
+  .option('--session-script <path>', 'session: remote script to intercept')
+  .option('--session-bundle <path>', 'session: local bundle path')
+  .option('-g, --global', 'write to ~/.pcf-helper/config.json instead of project-level')
+  .option('-d, --set-default', 'set this profile as the defaultProfile')
+  .option('-f, --force', 'overwrite an existing profile of the same name')
+  .option('--no-interactive', 'skip prompts for missing fields')
+  .action(async (name: string, flags: Record<string, unknown>) => {
+    const options: ProfileInitOptions = {
+      name,
+      environment: flags.environment as string | undefined,
+      publisherName: flags.publisherName as string | undefined,
+      publisherPrefix: flags.publisherPrefix as string | undefined,
+      path: flags.path as string | undefined,
+      template: flags.template as string | undefined,
+      framework: flags.framework as string | undefined,
+      sessionUrl: flags.sessionUrl as string | undefined,
+      sessionScript: flags.sessionScript as string | undefined,
+      sessionBundle: flags.sessionBundle as string | undefined,
+      global: !!flags.global,
+      setDefault: !!flags.setDefault,
+      force: !!flags.force,
+      nonInteractive: flags.interactive === false,
+    };
+    try {
+      await runProfileInit(options);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error(`Error: ${message}`);
+      process.exit(1);
+    }
+  });
+
+program.parseAsync();

@@ -143,7 +143,45 @@ pcf-helper-run profile list
 pcf-helper-run profile show prod
 pcf-helper-run profile current
 pcf-helper-run profile paths
+
+# Create a profile without editing JSON (see below for the full flag list)
+pcf-helper-run profile init dev \
+  --environment MyDevOrg \
+  --publisher-name "Tyler W" \
+  --publisher-prefix tyw \
+  --path ./MySolution \
+  --set-default \
+  --no-interactive
 ```
+
+### Creating a profile from the CLI
+
+`profile init <name>` creates or updates a profile without hand-editing
+`pcf-helper.config.json`. Project-level by default; pass `--global` to write to
+`~/.pcf-helper/config.json` (parent directory is created on first use).
+
+Interactive by default — each missing field prompts at the terminal, pre-filled
+with whatever you passed as a flag. Pass `--no-interactive` to skip the prompts
+entirely and write only what was supplied.
+
+| Flag | Description |
+|------|-------------|
+| `-e, --environment <env>` | Dataverse environment name |
+| `--publisher-name <name>` | Publisher display name |
+| `--publisher-prefix <prefix>` | Publisher prefix (2-8 chars) |
+| `-p, --path <path>` | Path to PCF solution folder |
+| `--template <template>` | `field` or `dataset` |
+| `--framework <framework>` | `none` or `react` |
+| `--session-url <url>` | Session: remote environment URL |
+| `--session-script <path>` | Session: remote script to intercept |
+| `--session-bundle <path>` | Session: local bundle path |
+| `-g, --global` | Write to `~/.pcf-helper/config.json` |
+| `-d, --set-default` | Also set `defaultProfile: <name>` |
+| `-f, --force` | Overwrite an existing profile of the same name |
+| `--no-interactive` | Skip prompts; only use passed flags |
+
+The write is atomic (temp file + rename), so an interrupted run never corrupts
+your config.
 
 ## 📖 Detailed Command Reference
 
