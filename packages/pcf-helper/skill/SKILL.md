@@ -1,32 +1,37 @@
 ---
 name: pcf-helper
-description: Build, deploy, upgrade, import, and run development sessions for Power Apps Component Framework (PCF) controls via @tywalk/pcf-helper and @tywalk/pcf-helper-run. Handles named profiles (dev/test/prod etc.) stored in pcf-helper.config.json so common parameters (environment, publisher, solution path) don't need to be repeated. Trigger when the user says anything like "deploy the control", "deploy to dev/test/prod", "build and deploy", "push PCF to <env>", "start a PCF session", "upgrade PCF deps", or references pcf-helper, pcf-helper-run, pcf-helper-deploy, ControlManifest, or a PCF solution folder. Do NOT use for: generative pages, canvas apps, C# plugins, Power Automate flows, Power BI, or model-driven form scripts.
+description: Build, deploy, upgrade, import, and run development sessions for Power Apps Component Framework (PCF) controls via @tywalk/pcf-helper and @tywalk/pcf-helper-run. Handles named profiles (dev/test/prod etc.) stored in pcf-helper.config.json so common parameters (environment, publisher, solution path) don't need to be repeated — including a `profile init` subcommand that creates profiles from the CLI without hand-editing JSON. Trigger when the user says anything like "deploy the control", "deploy to dev/test/prod", "build and deploy", "push PCF to (env)", "start a PCF session", "upgrade PCF deps", "set up a profile", "create a profile", "add a profile", "initialize a profile", or references pcf-helper, pcf-helper-run, pcf-helper-deploy, ControlManifest, pcf-helper.config.json, or a PCF solution folder. Do NOT use for: generative pages, canvas apps, C# plugins, Power Automate flows, Power BI, or model-driven form scripts.
 ---
 
 # pcf-helper skill
 
-Run and orchestrate the `@tywalk/pcf-helper-run` CLI. Turns vague requests like "deploy to dev" into the correct flags by reading the user's `pcf-helper.config.json` profiles.
+Run and orchestrate the `@tywalk/pcf-helper-run` CLI via `npx`. Turns vague requests like "deploy to dev" into the correct flags by reading the user's `pcf-helper.config.json` profiles.
+
+## How to invoke the CLI
+
+**Default to `npx @tywalk/pcf-helper-run <command>`.** The user runs this via npx the vast majority of the time — do NOT assume a global install and do NOT call `pcf-helper-run` bare unless the user explicitly says they've installed it globally (or you've confirmed via `where pcf-helper-run` / `which pcf-helper-run`).
+
+Every command shown below uses this form. The individual binaries (e.g. `@tywalk/pcf-helper/bin/deploy.js`) also exist and accept the same flags, but `npx @tywalk/pcf-helper-run` is the unified entry point and should always be preferred.
 
 ## When this skill applies
 
 - Any request to build, deploy, import, or upgrade a PCF control.
 - Any request mentioning a named environment (dev/test/prod/etc.) in a PCF context.
-- Starting a development session (live-reload via pcf-helper-session).
+- Starting a development session (live-reload).
 - Initializing a new PCF control.
 
 ## The CLI at a glance
 
-Prefer `pcf-helper-run` (unified). The individual binaries (`pcf-helper-deploy`, etc.) also exist and accept the same flags.
-
 | Command | Purpose |
 |---------|---------|
-| `pcf-helper-run init` | Scaffold a new PCF project |
-| `pcf-helper-run upgrade` | Upgrade PCF project deps |
-| `pcf-helper-run build` | Build the control |
-| `pcf-helper-run import` | Import the built control into a Dataverse env |
-| `pcf-helper-run deploy` | upgrade + build + import in one shot |
-| `pcf-helper-run session` | Live dev session (intercepts bundle in a running browser) |
-| `pcf-helper-run profile <list\|show\|current\|paths>` | Inspect profiles defined in pcf-helper.config.json |
+| `npx @tywalk/pcf-helper-run init` | Scaffold a new PCF project |
+| `npx @tywalk/pcf-helper-run upgrade` | Upgrade PCF project deps |
+| `npx @tywalk/pcf-helper-run build` | Build the control |
+| `npx @tywalk/pcf-helper-run import` | Import the built control into a Dataverse env |
+| `npx @tywalk/pcf-helper-run deploy` | upgrade + build + import in one shot |
+| `npx @tywalk/pcf-helper-run session` | Live dev session (intercepts bundle in a running browser) |
+| `npx @tywalk/pcf-helper-run profile <list\|show\|current\|paths>` | Inspect profiles defined in pcf-helper.config.json |
+| `npx @tywalk/pcf-helper-run profile init <name>` | Create/update a profile without hand-editing JSON |
 
 ## Profiles — how to resolve what the user actually wants
 
@@ -59,7 +64,7 @@ Precedence for session: **CLI flag > env var > active profile `session` > top-le
 
 ### Before running a command
 
-1. **Discover profiles before guessing.** Run `pcf-helper-run profile list` (or `pcf-helper-profile list`) to see what's defined. Don't invent profile names.
+1. **Discover profiles before guessing.** Run `npx @tywalk/pcf-helper-run profile list` to see what's defined. Don't invent profile names.
 2. **Map the user's words to a profile.** "deploy to dev" / "push to dev" / "ship to dev" → `--profile dev`. "deploy to production" / "prod" → `--profile prod`. "deploy" with no env hint → omit `--profile` (defaults apply).
 3. **If the user says something that doesn't match any configured profile**, show them the configured list and ask which one they meant rather than guessing.
 4. **CLI flags always override.** If the user says "deploy to dev but point at the hotfix env", that's `--profile dev --environment HotfixEnv`.
@@ -70,28 +75,28 @@ Precedence for session: **CLI flag > env var > active profile `session` > top-le
 
 ```bash
 # Uses the profile's environment; CLI path wins over profile path
-pcf-helper-run deploy -p <solution-path> --profile <env>
+npx @tywalk/pcf-helper-run deploy -p <solution-path> --profile <env>
 ```
 
 If `path` is set in the profile, you can omit `-p` entirely:
 
 ```bash
-pcf-helper-run deploy --profile <env>
+npx @tywalk/pcf-helper-run deploy --profile <env>
 ```
 
 ### "Just build / just import"
 
 ```bash
-pcf-helper-run build --profile <env>   # solo build
-pcf-helper-run import --profile <env>  # assumes build output already exists
+npx @tywalk/pcf-helper-run build --profile <env>   # solo build
+npx @tywalk/pcf-helper-run import --profile <env>  # assumes build output already exists
 ```
 
 ### "Start a dev session"
 
 ```bash
-pcf-helper-run session --profile <env>
+npx @tywalk/pcf-helper-run session --profile <env>
 # add --watch to kick off pcf-scripts watch in parallel
-pcf-helper-run session --profile <env> --watch
+npx @tywalk/pcf-helper-run session --profile <env> --watch
 ```
 
 If the project has a `session.config.json`, it's still honored (lowest precedence). Don't create one automatically — prefer the `session` block in `pcf-helper.config.json` for new setups.
@@ -99,16 +104,60 @@ If the project has a `session.config.json`, it's still honored (lowest precedenc
 ### "Upgrade the project"
 
 ```bash
-pcf-helper-run upgrade --profile <env>
+npx @tywalk/pcf-helper-run upgrade --profile <env>
 ```
 
 ### "Init a new control"
 
 ```bash
-pcf-helper-run init -n <ControlName> --profile <profile-with-publisher-info>
+npx @tywalk/pcf-helper-run init -n <ControlName> --profile <profile-with-publisher-info>
 # CLI flags can override profile values
-pcf-helper-run init -n <ControlName> --publisher-name "Override Pub" --publisher-prefix ovr
+npx @tywalk/pcf-helper-run init -n <ControlName> --publisher-name "Override Pub" --publisher-prefix ovr
 ```
+
+### "Set up a profile" / "Add a new profile" / "Initialize a profile"
+
+Use `profile init` instead of hand-editing `pcf-helper.config.json`. Writes
+project-level by default; add `--global` to write to `~/.pcf-helper/config.json`.
+
+```bash
+# Fully flag-driven (no prompts) — prefer this when the user has supplied all the values
+npx @tywalk/pcf-helper-run profile init dev \
+  --environment MyDevOrg \
+  --publisher-name "Tyler W" \
+  --publisher-prefix tyw \
+  --path ./MySolution \
+  --set-default \
+  --no-interactive
+
+# Interactive (default) — prompts for each field; pre-fills whatever flags were passed
+npx @tywalk/pcf-helper-run profile init test --environment MyTestOrg
+
+# Write to the global config instead of project-level
+npx @tywalk/pcf-helper-run profile init prod --global --environment MyProdOrg
+
+# Replace an existing profile (otherwise fails with "already exists")
+npx @tywalk/pcf-helper-run profile init dev --force --environment NewDevOrg --no-interactive
+```
+
+Flags worth knowing:
+
+- `--set-default` — also writes `defaultProfile: <name>`.
+- `--global` — writes `~/.pcf-helper/config.json` (creates parent dir on first use).
+- `--force` — overwrite if the profile name already exists.
+- `--no-interactive` — skip prompts; only use what was passed on the CLI.
+- `--session-url`, `--session-script`, `--session-bundle` — populate a `session`
+  block inside the profile (for live-reload dev sessions).
+
+Rules of thumb for Claude:
+
+1. If the user supplied all the values inline ("create a dev profile pointing at
+   MyDevOrg, publisher Tyler prefix tyw"), pass them as flags and add
+   `--no-interactive` so the command doesn't hang waiting on stdin.
+2. If the user asked vaguely ("help me set up a profile"), run without
+   `--no-interactive` so they get prompted. Warn them the command is
+   interactive so they know to answer at their terminal.
+3. Always prefer `profile init` over telling the user to edit JSON by hand.
 
 ## Verbose mode
 
@@ -121,21 +170,23 @@ All commands accept `-v` / `--verbose`. Use it when debugging deploy failures so
 ## When something goes wrong
 
 - **"Path argument is required"** → neither the CLI nor the profile supplied a path. Either pass `-p <path>` or add `path` to the profile.
-- **"Profile "<x>" not found"** → the user referenced a profile that doesn't exist. Run `pcf-helper-run profile list` and ask the user which of the available ones they meant.
+- **"Profile "<x>" not found"** → the user referenced a profile that doesn't exist. Run `npx @tywalk/pcf-helper-run profile list` and ask the user which of the available ones they meant.
 - **`pac solution import` failures** → usually auth. Check `pac auth list` (run in a terminal). A wrong environment in the profile is another common culprit.
 - **Session fails to intercept** → verify `remoteEnvironmentUrl`, `remoteScriptToIntercept`, and `localBundlePath` in either the profile's `session` block or `session.config.json`. A relative script path gets combined with the base URL automatically.
+- **`npx` prompts "Ok to proceed? (y)"** → happens on first use in a fresh directory. Pass `--yes` before the package (e.g. `npx --yes @tywalk/pcf-helper-run deploy ...`) when running non-interactively.
 
 ## Don'ts
 
+- **Don't call `pcf-helper-run` bare** — always use `npx @tywalk/pcf-helper-run ...` unless the user has confirmed a global install.
 - Don't hardcode environment URLs or publishers into ad-hoc commands when a profile would serve. Add the value to `pcf-helper.config.json` instead.
 - Don't create a `session.config.json` for new setups — put session values in `pcf-helper.config.json` under the `session` key (or inside a profile's `session` key).
-- Don't call `pac solution import` directly — use `pcf-helper-run deploy` or `pcf-helper-run import` so build/upgrade/import all stay in sync.
+- Don't call `pac solution import` directly — use `npx @tywalk/pcf-helper-run deploy` or `npx @tywalk/pcf-helper-run import` so build/upgrade/import all stay in sync.
 - Don't run `deploy` if the user only asked for a `build`. They'll push something they didn't intend.
 
 ## Quick reference: config paths
 
 ```bash
-pcf-helper-run profile paths
+npx @tywalk/pcf-helper-run profile paths
 # global:  /home/<user>/.pcf-helper/config.json  (or %USERPROFILE%\.pcf-helper\config.json on Windows)
 # project: ./pcf-helper.config.json
 # loaded:  <files that actually exist>

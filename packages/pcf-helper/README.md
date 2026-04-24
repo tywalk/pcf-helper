@@ -42,7 +42,7 @@ Each command is available as a standalone executable:
 | `pcf-helper-deploy` | Deploy controls (upgrade + build + import) | `pcf-helper-deploy [options]` |
 | `pcf-helper-upgrade` | Upgrade project dependencies | `pcf-helper-upgrade [options]` |
 | `pcf-helper-session` | Manage development sessions | `pcf-helper-session [options]` |
-| `pcf-helper-profile` | List/inspect named profiles from config | `pcf-helper-profile <list\|show\|current\|paths>` |
+| `pcf-helper-profile` | List/inspect/create named profiles from config | `pcf-helper-profile <list\|show\|current\|paths\|init>` |
 
 ## 🧭 Profiles
 
@@ -110,6 +110,54 @@ pcf-helper-profile show prod
 pcf-helper-profile current
 pcf-helper-profile paths
 ```
+
+### Creating a profile without editing JSON
+
+Use `pcf-helper-profile init <name>` to create or update a profile from the CLI.
+Writes to the project config (`./pcf-helper.config.json`) by default; pass
+`--global` to write to `~/.pcf-helper/config.json` instead (the parent directory
+is created automatically on first use).
+
+```bash
+# Fully flag-driven — no prompts. Good for scripts and AI agents.
+pcf-helper-profile init dev \
+  --environment MyDevOrg \
+  --publisher-name "Tyler W" \
+  --publisher-prefix tyw \
+  --path ./MySolution \
+  --set-default \
+  --no-interactive
+
+# Interactive (default) — prompts for each field, pre-filling any passed flags
+pcf-helper-profile init test --environment MyTestOrg
+
+# Write to the global config
+pcf-helper-profile init prod --global --environment MyProdOrg
+
+# Replace an existing profile (otherwise fails with "already exists")
+pcf-helper-profile init dev --force --environment NewDevOrg --no-interactive
+```
+
+Flags:
+
+| Option | Description |
+|--------|-------------|
+| `-e, --environment <env>` | Dataverse environment name |
+| `--publisher-name <name>` | Publisher display name |
+| `--publisher-prefix <prefix>` | Publisher prefix (2-8 chars) |
+| `-p, --path <path>` | Path to PCF solution folder |
+| `--template <template>` | Control template (`field` or `dataset`) |
+| `--framework <framework>` | Rendering framework (`none` or `react`) |
+| `--session-url <url>` | Session: remote environment URL |
+| `--session-script <path>` | Session: remote script to intercept |
+| `--session-bundle <path>` | Session: local bundle path |
+| `-g, --global` | Write to `~/.pcf-helper/config.json` instead of project |
+| `-d, --set-default` | Also set this profile as `defaultProfile` |
+| `-f, --force` | Overwrite an existing profile of the same name |
+| `--no-interactive` | Skip prompts; only use what was passed on the CLI |
+
+The write is atomic (temp file + rename), so a failed or interrupted run never
+leaves a corrupted `pcf-helper.config.json` behind.
 
 ## 📖 Command Reference
 

@@ -167,3 +167,90 @@ export function mergeSessionConfig(
   }
   return result;
 }
+
+/**
+ * Options for writing a new or updated profile to a pcf-helper config file.
+ */
+export interface WriteProfileOptions {
+  /** If true, write to the global config (~/.pcf-helper/config.json). Default: project-level. */
+  global?: boolean;
+  /** If true, also set `defaultProfile: <name>` in the target file. */
+  setDefault?: boolean;
+  /** If true, overwrite an existing profile of the same name. If false (default) and the name already exists, throws. */
+  force?: boolean;
+  /** Override the working directory (for project-level writes). Mainly useful in tests. */
+  cwd?: string;
+}
+
+export interface WriteProfileResult {
+  /** Absolute path of the file that was written. */
+  filePath: string;
+  /** True if the target file did not exist before this call. */
+  createdFile: boolean;
+  /** True if an existing profile of the same name was replaced. */
+  replacedProfile: boolean;
+}
+
+/**
+ * Writes a profile into the target pcf-helper config file, merging with any
+ * existing content. Creates the parent directory and the file itself if
+ * neither exists. Writes atomically (temp + rename) so a failed mid-write
+ * cannot corrupt the config.
+ *
+ * Throws if the profile name already exists and `force` is not set.
+ */
+export function writeProfile(
+  name: string,
+  profile: Profile,
+  options: WriteProfileOptions = {},
+): WriteProfileResult {
+  if (!name || !name.trim()) {
+    throw new Error('Profile name is required.');
+  }
+
+  const targetPath = options.global
+    ? getGlobalConfigPath()
+    : getProjectConfigPath(options.cwd);
+
+  const fileExisted = fs.existsSync(targetPath);
+  const existing: PcfHelperConfig = fileExisted
+    ? (readJsonIfExists(targetPath) ?? {})
+    : {};
+
+  const existingProfile = existing.profiles?.[name];
+  if (existingProfile && !options.force) {
+    throw new Error(
+      `Profile "${name}" already exists in ${targetPath}. Pass --force to overwrite.`,
+    );
+  }
+
+  const next: PcfHelperConfig = {
+    ...existing,
+    profiles: {
+      ...(existing.profiles ?? {}),
+      [name]: profile,
+    },
+  };
+
+  if (options.setDefault) {
+    next.defaultProfile = name;
+  }
+
+  // Ensure parent directory exists (matters for ~/.pcf-helper/ on first use).
+  const parentDir = path.dirname(targetPath);
+  if (!fs.existsSync(parentDir)) {
+    fs.mkdirSync(parentDir, { recursive: true });
+  }
+
+  // Atomic write: write to a temp file in the same directory, then rename.
+  const tmpPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`;
+  const serialized = JSON.stringify(next, null, 2) + '\n';
+  fs.writeFileSync(tmpPath, serialized, 'utf8');
+  fs.renameSync(tmpPath, targetPath);
+
+  return {
+    filePath: targetPath,
+    createdFile: !fileExisted,
+    replacedProfile: !!existingProfile,
+  };
+}
