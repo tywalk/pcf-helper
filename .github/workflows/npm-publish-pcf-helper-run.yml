@@ -30,6 +30,7 @@ jobs:
       - uses: codecov/codecov-action@v5
         with:
           flags: pcf-helper-run
+          files: ./packages/pcf-helper-run/coverage/lcov.info
 
   release:
     needs: test

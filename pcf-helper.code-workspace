@@ -10,5 +10,9 @@
 			"path": ".github"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"jest.disabledWorkspaceFolders": [
+			".github"
+		]
+	}
 }
